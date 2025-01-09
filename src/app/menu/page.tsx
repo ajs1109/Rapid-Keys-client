@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Keyboard, Users, User, Trophy } from 'lucide-react';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Keyboard, Users, User } from 'lucide-react';
 import useGameStore from '@/store/useGameStore';
 import type { GameMode } from '@/types/game';
 import { useRouter } from 'next/navigation';

@@ -1,12 +1,8 @@
-export type GameState = 'auth' | 'mode-select' | 'single' | 'multi';
+import { User } from "./auth";
+
+export type GameState = 'auth' | 'menu' | 'single' | 'multi';
 export type GameMode = 'single' | 'multi' | null;
 export type GameDifficulty = 'easy' | 'normal' | 'hard';
-
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-}
 
 export interface GameSettings {
   difficulty: GameDifficulty;

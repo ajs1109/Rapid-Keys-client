@@ -5,10 +5,11 @@ import { Card } from '@/components/ui/card';
 import { Timer, RotateCcw, Home, Trophy, Target, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useGameStore from '@/store/useGameStore';
+import { useRouter } from 'next/navigation';
 
 const SAMPLE_TEXT = `Technology continues to transform the way we live and work in unprecedented ways. As artificial intelligence becomes more sophisticated, it opens up new possibilities for innovation and efficiency. However, we must carefully consider the ethical implications of these advances. The rapid pace of digital transformation requires us to adapt quickly while maintaining our human connections. Despite the challenges, this era of technological revolution presents exciting opportunities for those who are willing to embrace change and learn continuously. The future belongs to those who can balance technical skills with human creativity.`;
 const GAME_TIME = 5;
-const TypingGame = () => {
+const SinglePlayer = () => {
   const [userInput, setUserInput] = useState('');
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
@@ -21,7 +22,7 @@ const TypingGame = () => {
   const hiddenInputRef = useRef<HTMLInputElement>(null);
   
   const { setGameState, setGameMode } = useGameStore();
-
+  const router = useRouter();
   useEffect(() => {
     hiddenInputRef.current?.focus();
     
@@ -140,6 +141,12 @@ const TypingGame = () => {
     hiddenInputRef.current?.focus();
   };
 
+  const homeButton = () => {
+    setGameState('menu');
+    setGameMode(null);
+    router.push('/menu');
+  }
+
   const renderText = () => {
     return SAMPLE_TEXT.split('').map((char, index) => {
       let className = 'transition-colors duration-150 text-lg font-mono ';
@@ -193,7 +200,7 @@ const TypingGame = () => {
           
           <div className="flex gap-4 justify-center">
             <Button 
-              onClick={() => setGameState('mode-select')}
+              onClick={homeButton}
               className="flex items-center gap-2"
               variant="secondary"
             >
@@ -273,4 +280,4 @@ const TypingGame = () => {
   );
 };
 
-export default TypingGame;
+export default SinglePlayer;

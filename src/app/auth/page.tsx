@@ -1,30 +1,84 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { FormEvent, useState } from 'react';
+import { signUp, login } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { AlertCircle, Keyboard } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, Keyboard, Users, User, Trophy } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import useGameStore from '@/store/useGameStore';
+import { useRouter } from 'next/navigation';
+import { AuthResponse } from '@/types/auth';
 
-// Auth Forms Component
-const AuthForms = ({ onAuthSuccess }) => {
+type LoginEvent = FormEvent<HTMLFormElement> & {
+  target: HTMLFormElement & {
+    elements: {
+      email: HTMLInputElement;
+      password: HTMLInputElement;
+    };
+  };
+};
+
+type SignUpEvent = FormEvent<HTMLFormElement> & {
+  target: HTMLFormElement & {
+    elements: {
+      username: HTMLInputElement;
+      email: HTMLInputElement;
+      password: HTMLInputElement;
+    };
+  };
+};
+
+const AuthForms = () => {
+  const router = useRouter();
   const [loginError, setLoginError] = useState('');
   const [signupError, setSignupError] = useState('');
+  const { setGameState } = useGameStore();
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: LoginEvent) => {
     e.preventDefault();
-    // Add login logic here
-    onAuthSuccess();
+    setLoginError('');
+    
+    try {
+      const formData = new FormData(e.target);
+      const { token, user } = await login(
+        formData.get('email') as string,
+        formData.get('password') as string
+      );
+      
+
+      onAuthSuccess(user, token);
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : 'Login failed');
+    }
   };
 
-  const handleSignup = async (e) => {
+  const handleSignup = async (e: SignUpEvent) => {
     e.preventDefault();
-    // Add signup logic here
-    onAuthSuccess();
+    setSignupError('');
+    
+    try {
+      const formData = new FormData(e.target);
+      const { token, user } = await signUp(
+        formData.get('username') as string,
+        formData.get('email') as string,
+        formData.get('password') as string
+      );
+      
+      onAuthSuccess(user, token);
+    } catch (error) {
+      setSignupError(error instanceof Error ? error.message : 'Login failed');
+    }
   };
+
+  const onAuthSuccess = (user: any, token: any) => {
+    setGameState('menu');
+    window.dispatchEvent(new Event('auth-state-changed'));
+    router.push('/menu');
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-violet-500/10 to-purple-500/10">
@@ -56,6 +110,7 @@ const AuthForms = ({ onAuthSuccess }) => {
                     <Label htmlFor="login-email">Email</Label>
                     <Input
                       id="login-email"
+                      name="email"
                       type="email"
                       placeholder="john@example.com"
                       required
@@ -65,6 +120,7 @@ const AuthForms = ({ onAuthSuccess }) => {
                     <Label htmlFor="login-password">Password</Label>
                     <Input
                       id="login-password"
+                      name="password"
                       type="password"
                       required
                     />
@@ -91,6 +147,7 @@ const AuthForms = ({ onAuthSuccess }) => {
                     <Label htmlFor="signup-username">Username</Label>
                     <Input
                       id="signup-username"
+                      name="username"
                       type="text"
                       placeholder="speedtyper123"
                       required
@@ -100,6 +157,7 @@ const AuthForms = ({ onAuthSuccess }) => {
                     <Label htmlFor="signup-email">Email</Label>
                     <Input
                       id="signup-email"
+                      name="email"
                       type="email"
                       placeholder="john@example.com"
                       required
@@ -109,6 +167,7 @@ const AuthForms = ({ onAuthSuccess }) => {
                     <Label htmlFor="signup-password">Password</Label>
                     <Input
                       id="signup-password"
+                      name="password"
                       type="password"
                       required
                     />
