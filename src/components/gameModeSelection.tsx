@@ -1,14 +1,14 @@
 'use client'
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Keyboard, Users, User, Trophy } from 'lucide-react';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Keyboard, Users, User } from 'lucide-react';
 import useGameStore from '@/store/useGameStore';
-import type { GameMode } from '@/types/game';
+import type { GameMode } from '@/lib/types/game';
 import { useRouter } from 'next/navigation';
 
 const GameModeSelection: React.FC = () => {
-  const { setGameState, setGameMode, isPublicRoute } = useGameStore();
+  const { setGameState, setGameMode } = useGameStore();
   const router = useRouter();
   const handleModeSelect = (mode: GameMode) => {
     if (mode) {
@@ -18,7 +18,6 @@ const GameModeSelection: React.FC = () => {
     }
   };
 
-  console.log('is public route', isPublicRoute);
   const GameCard: React.FC<{
     mode: GameMode;
     icon: React.ReactNode;

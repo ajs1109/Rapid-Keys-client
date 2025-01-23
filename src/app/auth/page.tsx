@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import useGameStore from '@/store/useGameStore';
 import { useRouter } from 'next/navigation';
-import { AuthResponse } from '@/types/auth';
 
 type LoginEvent = FormEvent<HTMLFormElement> & {
   target: HTMLFormElement & {
@@ -44,13 +43,13 @@ const AuthForms = () => {
     
     try {
       const formData = new FormData(e.target);
-      const { token, user } = await login(
+      const response = await login(
         formData.get('email') as string,
         formData.get('password') as string
       );
       
 
-      onAuthSuccess(user, token);
+      onAuthSuccess(response?.user, response?.token);
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : 'Login failed');
     }

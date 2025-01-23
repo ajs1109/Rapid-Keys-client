@@ -6,12 +6,13 @@ import { Timer, RotateCcw, Home, Trophy, Target, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import useGameStore from '@/store/useGameStore';
 import { useRouter } from 'next/navigation';
+import { generateText } from '@/lib/api';
 
-const SAMPLE_TEXT = `Technology continues to transform the way we live and work in unprecedented ways. As artificial intelligence becomes more sophisticated, it opens up new possibilities for innovation and efficiency. However, we must carefully consider the ethical implications of these advances. The rapid pace of digital transformation requires us to adapt quickly while maintaining our human connections. Despite the challenges, this era of technological revolution presents exciting opportunities for those who are willing to embrace change and learn continuously. The future belongs to those who can balance technical skills with human creativity.`;
 const GAME_TIME = 5;
 const SinglePlayer = () => {
   const [userInput, setUserInput] = useState('');
   const [isActive, setIsActive] = useState(false);
+  const [sampleText, setSampleText] = useState('');
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
   const [wpm, setWpm] = useState(0);
   const [accuracy, setAccuracy] = useState(100);
@@ -34,19 +35,16 @@ const SinglePlayer = () => {
   }, []);
 
   useEffect(() => {
-    console.log('userInput:',userInput);
-  
-  }, [userInput])
+    generateParagraph();
+  }, []);
   
   useEffect(() => {
-    let intervalId;
+    let intervalId: NodeJS.Timeout | undefined;
     if (isActive && timeLeft > 0) {
       intervalId = setInterval(() => {
         setTimeLeft(time => {
           if (time <= 1) {
-            console.log('1 sec left', userInput);
             clearInterval(intervalId);
-            console.log('ss', userInput);
             endGame();
             return 0;
           }
@@ -55,26 +53,26 @@ const SinglePlayer = () => {
         
       }, 1000);
     }
+
     return () => clearInterval(intervalId);
   }, [isActive]);
 
   useEffect(() => {
     if (isActive && userInput.length > 0) {
-      console.log('object:', userInput);
       const minutes = (GAME_TIME - timeLeft) / 60;
       
       let correctChars = 0;
       for (let i = 0; i < userInput.length; i++) {
-        if (userInput[i] === SAMPLE_TEXT[i]) correctChars++;
+        if (userInput[i] === sampleText[i]) correctChars++;
       }
 
       let correctWordsCount = 0;
       for(let i = 0; i < userInput.length; i++) {
         let wordFlag: boolean = true;
-        if(userInput[i] !== SAMPLE_TEXT[i]){
+        if(userInput[i] !== sampleText[i]){
           wordFlag = false;
         }
-        if(i < SAMPLE_TEXT.length && userInput[i] === SAMPLE_TEXT[i] && userInput[i] === ' ' && wordFlag) {
+        if(i < sampleText.length && userInput[i] === sampleText[i] && userInput[i] === ' ' && wordFlag) {
           correctWordsCount++;
           wordFlag = true;
         }
@@ -87,49 +85,31 @@ const SinglePlayer = () => {
       const currentWpm = Math.round(correctWords / Math.max(minutes, 1/60));
       setWpm(currentWpm);
       setAccuracy(currentAccuracy);
-      console.log('use effect ended ', userInput);
     }
   }, [userInput, isActive]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isActive) {
       setIsActive(true);
     }
     if(timeLeft > 0){
-      console.log('xaxa:',e.target.value);
       setUserInput(e.target.value);
-      console.log('xaxax:', userInput);
     }
   };
   
   const endGame = () => {
-    console.log('end game:',userInput);
     setIsActive(false);
     setShowResults(true);
-    
-    // const timeInMinutes = (60 - timeLeft) / 60; 
-    // const wordCount = userInput.trim().split(/\s+/).filter(word => word.length > 0).length;
-    // const finalWpm = Math.round(wordCount / Math.max(timeInMinutes, 1/60));
-    
-    // let correctChars = 0;
-    // for (let i = 0; i < userInput.length; i++) {
-    //   if (userInput[i] === SAMPLE_TEXT[i]) {
-    //     correctChars++;
-    //   }
-    // }
-    
-    // setWpm(finalWpm);
-    // setCorrectCharacters(correctChars);
-    // setTotalCharacters(userInput.length);
-    // if (userInput.length > 0) {
-    //   setAccuracy(Math.round((correctChars / userInput.length) * 100));
-    // } else {
-    //   setAccuracy(0);
-    // }
   };
+
+  const generateParagraph = async () => {
+    let SAMPLE_TEXT = await generateText(150);
+    setSampleText(SAMPLE_TEXT);
+  }
 
   const resetGame = () => {
     console.log('reset game called');
+    generateParagraph();
     setUserInput('');
     setIsActive(false);
     setTimeLeft(GAME_TIME);
@@ -148,7 +128,7 @@ const SinglePlayer = () => {
   }
 
   const renderText = () => {
-    return SAMPLE_TEXT.split('').map((char, index) => {
+    return sampleText.split('').map((char: string, index: number) => {
       let className = 'transition-colors duration-150 text-lg font-mono ';
       if (index < userInput.length) {
         className += userInput[index] === char 

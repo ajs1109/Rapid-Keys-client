@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { decodeToken, getUserFromCookie } from '@/utils/auth';
+import { decodeToken } from '@/lib/utils/auth';
 import { publicRoutes } from './routes';
-import { DecodedToken } from './types/auth';
 
 export async function middleware(request: NextRequest) {
   console.log('middleware activated');

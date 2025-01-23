@@ -1,7 +1,7 @@
 // store/authStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DecodedToken } from '@/types/auth';
+import { DecodedToken } from '@/lib/types/auth';
 
 interface AuthState {
   user: DecodedToken | null;

@@ -14,13 +14,21 @@ export const authUtils = {
     document.cookie = `${AUTH_COOKIE}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict`;
   },
 
-  handleAuthResponse: async (response: Response): Promise<AuthResponse> => {
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Authentication failed');
+  handleAuthResponse: async (response: any): Promise<AuthResponse> => {
+    try {
+      
+      console.log('response is not OK', response);
+      // Check if the response is OK
+      if (response.ok) {
+        return response;
+      }
+      throw new Error(response.error || 'Authentication failed');
+    } catch (parseError: any) {
+      // Fallback in case response body cannot be parsed
+      console.error('Failed to parse response:', parseError);
+      throw new Error('An error occurred while processing the response.');
     }
-    return response.json();
-  }
+  },
 };
 
 export const decodeToken = async (token: string): Promise<DecodedToken | null> => {
@@ -34,7 +42,6 @@ export const decodeToken = async (token: string): Promise<DecodedToken | null> =
     const secretBytes = new TextEncoder().encode(secret);
     const { payload } = await jose.jwtVerify(token, secretBytes);
 
-    // Extract only the fields we want and type them correctly
     const decodedToken: DecodedToken = {
       id: payload.id as string,
       username: payload.username as string,
@@ -43,33 +50,12 @@ export const decodeToken = async (token: string): Promise<DecodedToken | null> =
       exp: payload.exp as number
     };
 
-    // console.log('decoded token:', decodedToken);
     return decodedToken;
   } catch (error) {
     console.error('Token decode error:', error);
     return null;
   }
 };
-
-export const getUserFromCookie = async (): Promise<DecodedToken | null> => {
-  const authToken = getCookie('auth_token');
-    
-    if (authToken) {
-      console.log('authToken found');
-      const decoded = await decodeToken(authToken) as DecodedToken;
-      console.log('dtoken', decoded);
-      if (decoded) {
-        return decoded;
-      } else {
-        console.warn('Invalid or malformed token');
-      }
-    } else {
-      console.warn('No auth token found');
-    }
-
-    return null;
-  
-}
 
 export function getCookie(name: string): string | undefined {
   console.log('cookie:', Cookies.get(name));

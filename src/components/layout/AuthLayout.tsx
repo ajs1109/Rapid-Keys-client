@@ -1,10 +1,8 @@
 'use client'
 
-import React from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import React, { useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { publicRoutes } from '@/routes';
-import { User } from '@/types/auth';
+import { User } from '@/lib/types/auth';
 import Header from './Header';
 import Footer from './Footer';
 
@@ -14,30 +12,36 @@ interface AuthLayoutProps {
 }
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children, initialUser }) => {
-  const { user } = useAuthStore();
-  console.log('from auth layout:', user);
-  const router = useRouter();
-  const pathname = usePathname();
-  const isPublicRoute = publicRoutes.includes(pathname);
-
-  // useEffect(() => {
-  //   const initializeAuth = async () => {
-  //     if (initialUser) {
-  //       setUser(initialUser);
-  //     } else {
-  //       const validatedUser = await authService.validateToken();
-  //       console.log('::', validatedUser);
-  //       setUser(validatedUser);
-  //     }
-  //   };
-
-  //   initializeAuth();
-  // }, [initialUser, setUser]);
-
-//   if (isLoading) {
-//     return <div>Loading...</div>; // Replace with your loading component
-//   }
-
+  const { setUser, setLoading, user } = useAuthStore();
+  
+    const syncUserData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error syncing user data:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    useEffect(() => {
+      syncUserData();
+  
+      window.addEventListener('auth-state-changed', syncUserData);
+      
+      return () => {
+        window.removeEventListener('auth-state-changed', syncUserData);
+      };
+    }, []);
+  
   return (
     <div className="min-h-screen flex flex-col">
       {user && <Header username={user.username} />}
