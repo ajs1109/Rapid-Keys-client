@@ -2,13 +2,12 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { decodeToken } from '@/utils/auth';
 import { publicRoutes } from '@/routes';
-import { refreshAccToken } from '@/lib/api';
 import { User } from './types/auth';
 
 export async function middleware(request: NextRequest) {
   console.log('middleware activated');
 
-  const accessToken = request.cookies.get('access_token')?.value;
+  // const accessToken = request.cookies.get('access_token')?.value;
   const refreshToken = request.cookies.get('refresh_token')?.value;
 
   let isAuthenticated = false;
@@ -17,7 +16,7 @@ export async function middleware(request: NextRequest) {
   if(refreshToken){
     console.log('refresh token:', refreshToken);
     try {
-      var decoded =await decodeToken(refreshToken);
+      const decoded =await decodeToken(refreshToken);
       if(decoded !== null){
       isAuthenticated = true;
       userData = decoded;

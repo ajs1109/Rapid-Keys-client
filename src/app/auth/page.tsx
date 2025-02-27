@@ -10,9 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import useGameStore from '@/store/useGameStore';
-import { useRouter } from 'next/navigation';
-import { AuthResponse } from '@/types/auth';
-import Cookies from 'js-cookie';
 
 type AuthEvent = FormEvent<HTMLFormElement> & {
   target: HTMLFormElement & {
@@ -25,7 +22,6 @@ type AuthEvent = FormEvent<HTMLFormElement> & {
 };
 
 const AuthForms = () => {
-  const router = useRouter();
   const [loginError, setLoginError] = useState('');
   const [signupError, setSignupError] = useState('');
   const { setGameState } = useGameStore();
@@ -66,7 +62,6 @@ const AuthForms = () => {
   };
 
   const onAuthSuccess = (user: any, accessToken: any) => {
-    Cookies.set('access_token', accessToken);
     setGameState('menu');
 
     // Dispatch an event to sync auth state

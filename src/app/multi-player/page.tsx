@@ -166,6 +166,7 @@ const MultiPlayer: React.FC = () => {
     });
     
     socket.on('playerProgress', ({ userId, progress, wpm, accuracy, finished, position }) => {
+      console.log(position);
       setPlayers(prev => prev.map(player => 
         player.userId === userId ? { ...player, progress, wpm, accuracy, finished } : player
       ));

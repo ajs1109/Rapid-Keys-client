@@ -1,12 +1,10 @@
 // components/layout/Layout.tsx
 'use client'
 
-import React, { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
-import Header from './Header';
-import Footer from './Footer';
 import useStore from '@/store/useGameStore';
-import { publicRoutes } from '@/routes';
+import React, { useEffect } from 'react';
+import Footer from './Footer';
+import Header from './Header';
 
 interface LayoutProps {
   children: React.ReactNode;

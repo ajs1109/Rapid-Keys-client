@@ -166,18 +166,18 @@ const SinglePlayer = () => {
   };
 
   const ResultsPopup = () => {
-    const finalStats = {
-      wpm: wpm,
-      accuracy: accuracy,
-      correctChars: correctCharacters,
-      totalChars: totalCharacters
-    };
+    // const finalStats = {
+    //   wpm: wpm,
+    //   accuracy: accuracy,
+    //   correctChars: correctCharacters,
+    //   totalChars: totalCharacters
+    // };
     return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm">
       <Card className="w-full max-w-md p-8 bg-white bg-opacity-90 backdrop-blur">
         <div className="text-center space-y-6">
           <Trophy className="h-16 w-16 text-yellow-500 mx-auto" />
-          <h2 className="text-2xl font-bold text-gray-800">Time's Up!</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Time &apos; s Up!</h2>
           
           <div className="grid grid-cols-2 gap-4 my-8">
             <div className="space-y-1">

@@ -1,5 +1,5 @@
 import * as jose from 'jose';
-import { AuthResponse, DecodedToken, MongoErrorResponse, User } from '../types/auth';
+import { AuthResponse, User } from '../types/auth';
 import Cookies from 'js-cookie';
 
 export const AUTH_COOKIE = 'auth_token';

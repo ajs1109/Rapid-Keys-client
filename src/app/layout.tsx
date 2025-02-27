@@ -1,12 +1,9 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { cookies } from "next/headers";
 import AuthLayout from '@/components/layout/AuthLayout';
-import { decodeToken } from '@/utils/auth'
 import { AuthSync } from "@/utils/AuthSync";
-import PageLoader from "@/components/PageLoader";
+import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Toaster } from "sonner";
+import "./globals.css";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -32,7 +29,6 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const authToken = cookieStore.get('access_token')?.value;
   console.log('auth token:', authToken);
-  let initialUser = null;
   // cookieStore.set
   // const {user} = await refreshAccessToken();
   // initialUser = user;
@@ -55,7 +51,7 @@ export default async function RootLayout({
       <body className="antialiased">
         <Toaster position="top-right"/>
       <AuthSync />
-        <AuthLayout initialUser={initialUser}>{children}</AuthLayout>
+        <AuthLayout>{children}</AuthLayout>
       </body>
     </html>
   );

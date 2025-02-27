@@ -1,21 +1,19 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
+import { loggedInUserData, me } from '@/lib/api';
 import { publicRoutes } from '@/routes';
 import { User } from '@/types/auth';
-import Header from './Header';
-import Footer from './Footer';
 import { decodeToken } from '@/utils/auth';
-import { loggedInUserData, me, refreshAccessToken, refreshAuthToken } from '@/lib/api';
+import { usePathname, useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import Footer from './Footer';
+import Header from './Header';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
-  initialUser?: User | null;
 }
 
-const AuthLayout: React.FC<AuthLayoutProps> = ({ children, initialUser }) => {
+const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>();
 
   useEffect(() => {
@@ -34,19 +32,19 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, initialUser }) => {
   }
     
 
-  const setUserFromCookie = async () => {
-    // const cookieStore = await cookies();
-    // const token = cookieStore.get('access_token')?.value;
-    const token = await me();
-    console.log('me token: ' + token);
-    if(token){
-      const decoded = await decodeToken(token);
-      setUser(decoded);
-    }
+  // const setUserFromCookie = async () => {
+  //   // const cookieStore = await cookies();
+  //   // const token = cookieStore.get('access_token')?.value;
+  //   const token = await me();
+  //   console.log('me token: ' + token);
+  //   if(token){
+  //     const decoded = await decodeToken(token);
+  //     setUser(decoded);
+  //   }
 
-  }
+  // }
   console.log('from auth layout:', user);
-  const router = useRouter();
+  // const router = useRouter();
   const pathname = usePathname();
   const isPublicRoute = publicRoutes.includes(pathname);
 

@@ -1,11 +1,11 @@
 'use client'
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Keyboard, Users, User, Trophy } from 'lucide-react';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import useGameStore from '@/store/useGameStore';
 import type { GameMode } from '@/types/game';
+import { Keyboard, User, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import React from 'react';
 
 const GameModeSelection: React.FC = () => {
   const { setGameState, setGameMode, isPublicRoute } = useGameStore();

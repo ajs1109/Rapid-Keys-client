@@ -45,7 +45,7 @@ const initialState = {
 
 const useStore = create<GameStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ...initialState,
 
       setGameState: (state) => set({ gameState: state }),
