@@ -1,4 +1,3 @@
-import jwt from 'jsonwebtoken';
 import * as jose from 'jose';
 import { AuthResponse, DecodedToken, MongoErrorResponse, User } from '../types/auth';
 import Cookies from 'js-cookie';
@@ -54,14 +53,3 @@ export function getCookie(name: string): string | undefined {
   console.log('cookie:', Cookies.get(name));
   return Cookies.get(name);
 }
-
-export const generateToken = (payload: DecodedToken): string => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT_SECRET is not defined');
-  }
-
-  return jwt.sign(payload, secret, {
-    expiresIn: '7d', // Match cookie expiry
-  });
-};
