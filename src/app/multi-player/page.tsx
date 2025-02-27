@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Card } from '@/components/ui/card';
-import { Timer, RotateCcw, Home, Trophy, Target, RefreshCw, Users, Send, LogIn, Copy, Sword, Swords } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import useGameStore from '@/store/useGameStore';
+import { Copy, Home, LogIn, RefreshCw, Send, Swords, Target, Timer, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import React, { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
 
@@ -162,7 +162,7 @@ const MultiPlayer: React.FC = () => {
       setTimeLeft(gameTime);
       setCountdown(null);
       setIsActive(true);
-      //hiddenInputRef.current?.focus();
+      hiddenInputRef.current?.focus();
     });
     
     socket.on('playerProgress', ({ userId, progress, wpm, accuracy, finished, position }) => {
@@ -230,13 +230,13 @@ const MultiPlayer: React.FC = () => {
   
   // Focus the hidden input
   useEffect(() => {
-    // hiddenInputRef.current?.focus();
+    hiddenInputRef.current?.focus();
     
-    // const handleClick = () => {
-    //   hiddenInputRef.current?.focus();
-    // };
-    // document.addEventListener('click', handleClick);
-    // return () => document.removeEventListener('click', handleClick);
+    const handleClick = () => {
+      hiddenInputRef.current?.focus();
+    };
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
   }, []);
   
   // Game timer
@@ -333,7 +333,7 @@ const MultiPlayer: React.FC = () => {
     setIsReady(false);
     setUserFinishPosition(null);
     setGameEnded(false);
-    //hiddenInputRef.current?.focus();
+    hiddenInputRef.current?.focus();
   };
   
   const homeButton = () => {
@@ -644,7 +644,7 @@ const MultiPlayer: React.FC = () => {
       
       <input
         title='Start Typing'
-        //ref={hiddenInputRef}
+        ref={hiddenInputRef}
         value={userInput}
         onChange={handleInputChange}
         className="opacity-0 absolute top-0 left-0 h-0 w-0"

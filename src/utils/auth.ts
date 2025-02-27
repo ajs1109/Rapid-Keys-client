@@ -32,6 +32,7 @@ export const decodeToken = async (token: string): Promise<User | null> => {
     }
 
     const secretBytes = new TextEncoder().encode(secret);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { payload } = await jose.jwtVerify(token, secretBytes) as any;
     console.log('payload:',payload);
     // Extract only the fields we want and type them correctly

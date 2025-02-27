@@ -32,12 +32,12 @@ const AuthForms = () => {
     
     try {
       const formData = new FormData(e.target);
-      const { accessToken, user } = await login(
+      await login(
         formData.get('email') as string,
         formData.get('password') as string
       );
 
-      onAuthSuccess(user, accessToken);
+      onAuthSuccess();
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : 'Login failed');
     }
@@ -49,19 +49,19 @@ const AuthForms = () => {
     
     try {
       const formData = new FormData(e.target);
-      const { accessToken, user } = await signUp(
+      await signUp(
         formData.get('username') as string,
         formData.get('email') as string,
         formData.get('password') as string
       );
 
-      onAuthSuccess(user, accessToken);
+      onAuthSuccess();
     } catch (error) {
       setSignupError(error instanceof Error ? error.message : 'Signup failed');
     }
   };
 
-  const onAuthSuccess = (user: any, accessToken: any) => {
+  const onAuthSuccess = () => {
     setGameState('menu');
 
     // Dispatch an event to sync auth state

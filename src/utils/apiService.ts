@@ -60,17 +60,17 @@ export class ApiService {
     const response: AxiosResponse<T> = await this.axiosInstance.get(url, config);
     return response.data;
   }
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     const response: AxiosResponse<T> = await this.axiosInstance.post(url, data, config);
     return response.data;
   }
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     const response: AxiosResponse<T> = await this.axiosInstance.put(url, data, config);
     return response.data;
   }
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
   async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     const response: AxiosResponse<T> = await this.axiosInstance.patch(url, data, config);
     return response.data;
