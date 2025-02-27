@@ -4,7 +4,8 @@ import Cookies from 'js-cookie';
 export class ApiService {
   private axiosInstance: AxiosInstance;
 
-  constructor(baseURL: string = process.env.SERVER_URI || 'http://localhost:5000/api') {
+  constructor(baseURL: string = process.env.SERVER_URI || 'http://localhost:5000') {
+    baseURL = `${baseURL}/api`;
     this.axiosInstance = axios.create({
       baseURL,
       headers: {
