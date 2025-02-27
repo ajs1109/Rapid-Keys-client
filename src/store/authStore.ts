@@ -1,13 +1,13 @@
 // store/authStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DecodedToken } from '@/types/auth';
+import { DecodedToken, User } from '@/types/auth';
 
 interface AuthState {
-  user: DecodedToken | null;
+  user: User | null;
   isLoading: boolean;
   isAuthenticating: boolean;
-  setUser: (user: DecodedToken | null) => void;
+  setUser: (user: User | null) => void;
   clearUser: () => void;
   setLoading: (loading: boolean) => void;
   setAuthenticating: (authenticating: boolean) => void;
@@ -19,7 +19,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isLoading: true, // Initial loading state
       isAuthenticating: false,
-      setUser: (user) => set({ user }),
+      setUser: (user) => set({user}),
       clearUser: () => set({ user: null }),
       setLoading: (loading) => set({ isLoading: loading }),
       setAuthenticating: (authenticating) => set({ isAuthenticating: authenticating }),

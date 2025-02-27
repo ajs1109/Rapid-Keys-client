@@ -3,6 +3,8 @@
 
 import { useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { useInitializeAuth } from '@/store/useGameStore';
+import { loggedInUserData } from '@/lib/api';
 
 export function AuthSync() {
   const { setUser, setLoading } = useAuthStore();
@@ -10,13 +12,9 @@ export function AuthSync() {
   const syncUserData = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        setUser(null);
-      }
+        const {user: hiUser} = await loggedInUserData();
+        setUser(hiUser || null);
+        
     } catch (error) {
       console.error('Error syncing user data:', error);
       setUser(null);
@@ -35,6 +33,6 @@ export function AuthSync() {
       window.removeEventListener('auth-state-changed', syncUserData);
     };
   }, []);
-
+  useInitializeAuth();
   return null;
 }

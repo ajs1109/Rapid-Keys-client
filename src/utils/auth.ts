@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
 import * as jose from 'jose';
 import { Error as MongoError } from 'mongoose';
-import { AuthResponse, DecodedToken, MongoErrorResponse } from '../types/auth';
+import { AuthResponse, DecodedToken, MongoErrorResponse, User } from '../types/auth';
 import Cookies from 'js-cookie';
+
 export const AUTH_COOKIE = 'auth_token';
 
 export const authUtils = {
@@ -23,24 +24,23 @@ export const authUtils = {
   }
 };
 
-export const decodeToken = async (token: string): Promise<DecodedToken | null> => {
+export const decodeToken = async (token: string): Promise<User | null> => {
   try {
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.JWT_SECRET || "XES";
+    console.log('jwtsecret:',secret);
     if (!secret) {
       console.error('JWT_SECRET is not defined');
       return null;
     }
 
     const secretBytes = new TextEncoder().encode(secret);
-    const { payload } = await jose.jwtVerify(token, secretBytes);
-
+    const { payload } = await jose.jwtVerify(token, secretBytes) as any;
+    console.log('payload:',payload);
     // Extract only the fields we want and type them correctly
-    const decodedToken: DecodedToken = {
-      id: payload.id as string,
-      username: payload.username as string,
-      email: payload.email as string,
-      iat: payload.iat as number,
-      exp: payload.exp as number
+    const decodedToken: User = {
+      id: payload.user._id as string,
+      username: payload.user.username as string,
+      email: payload.user.email as string
     };
 
     // console.log('decoded token:', decodedToken);
@@ -50,26 +50,6 @@ export const decodeToken = async (token: string): Promise<DecodedToken | null> =
     return null;
   }
 };
-
-export const getUserFromCookie = async (): Promise<DecodedToken | null> => {
-  const authToken = getCookie('auth_token');
-    
-    if (authToken) {
-      console.log('authToken found');
-      const decoded = await decodeToken(authToken) as DecodedToken;
-      console.log('dtoken', decoded);
-      if (decoded) {
-        return decoded;
-      } else {
-        console.warn('Invalid or malformed token');
-      }
-    } else {
-      console.warn('No auth token found');
-    }
-
-    return null;
-  
-}
 
 export function getCookie(name: string): string | undefined {
   console.log('cookie:', Cookies.get(name));

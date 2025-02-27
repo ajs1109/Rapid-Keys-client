@@ -1,27 +1,36 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { decodeToken, getUserFromCookie } from '@/utils/auth';
-import { publicRoutes } from './routes';
-import { DecodedToken } from './types/auth';
+import { decodeToken } from '@/utils/auth';
+import { publicRoutes } from '@/routes';
+import { refreshAccToken } from '@/lib/api';
+import { User } from './types/auth';
 
 export async function middleware(request: NextRequest) {
   console.log('middleware activated');
-  const authToken = request.cookies.get('auth_token')?.value;
-  let isAuthenticated = false;
-  let userData = null;
 
-  if (authToken) {
-    const decoded = await decodeToken(authToken);
-    if (decoded) {
+  const accessToken = request.cookies.get('access_token')?.value;
+  const refreshToken = request.cookies.get('refresh_token')?.value;
+
+  let isAuthenticated = false;
+  let userData: User | null = null;
+
+  if(refreshToken){
+    console.log('refresh token:', refreshToken);
+    try {
+      var decoded =await decodeToken(refreshToken);
+      if(decoded !== null){
       isAuthenticated = true;
       userData = decoded;
+      }
+    } catch (error) {
+      console.log('Refresh token expired or invalid:', error);
     }
   }
+
   const path = request.nextUrl.pathname;
-  console.log('path:', path);
   const isAuthPath = publicRoutes.includes(path);
   const isEmptyPath = path === '/';
-
+  console.log('path:', path, isAuthenticated, isAuthPath, userData);
   if (!isAuthenticated && !isAuthPath) {
     return NextResponse.redirect(new URL('/auth', request.url));
   }
@@ -30,17 +39,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/menu', request.url));
   }
 
-  // Clone the response to modify headers
   const response = NextResponse.next();
-  
-  // Add user data to response headers if authenticated
+
   if (isAuthenticated && userData) {
     response.headers.set(
-      'x-user-data', 
+      'x-user-data',
       JSON.stringify({
         id: userData.id,
         username: userData.username,
-        email: userData.email
+        email: userData.email,
       })
     );
   }

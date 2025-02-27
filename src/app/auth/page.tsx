@@ -12,20 +12,12 @@ import { Button } from '@/components/ui/button';
 import useGameStore from '@/store/useGameStore';
 import { useRouter } from 'next/navigation';
 import { AuthResponse } from '@/types/auth';
+import Cookies from 'js-cookie';
 
-type LoginEvent = FormEvent<HTMLFormElement> & {
+type AuthEvent = FormEvent<HTMLFormElement> & {
   target: HTMLFormElement & {
     elements: {
-      email: HTMLInputElement;
-      password: HTMLInputElement;
-    };
-  };
-};
-
-type SignUpEvent = FormEvent<HTMLFormElement> & {
-  target: HTMLFormElement & {
-    elements: {
-      username: HTMLInputElement;
+      username?: HTMLInputElement;
       email: HTMLInputElement;
       password: HTMLInputElement;
     };
@@ -38,46 +30,50 @@ const AuthForms = () => {
   const [signupError, setSignupError] = useState('');
   const { setGameState } = useGameStore();
 
-  const handleLogin = async (e: LoginEvent) => {
+  const handleLogin = async (e: AuthEvent) => { 
     e.preventDefault();
     setLoginError('');
     
     try {
       const formData = new FormData(e.target);
-      const { token, user } = await login(
+      const { accessToken, user } = await login(
         formData.get('email') as string,
         formData.get('password') as string
       );
-      
 
-      onAuthSuccess(user, token);
+      onAuthSuccess(user, accessToken);
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : 'Login failed');
     }
   };
 
-  const handleSignup = async (e: SignUpEvent) => {
+  const handleSignup = async (e: AuthEvent) => {
     e.preventDefault();
     setSignupError('');
     
     try {
       const formData = new FormData(e.target);
-      const { token, user } = await signUp(
+      const { accessToken, user } = await signUp(
         formData.get('username') as string,
         formData.get('email') as string,
         formData.get('password') as string
       );
-      
-      onAuthSuccess(user, token);
+
+      onAuthSuccess(user, accessToken);
     } catch (error) {
-      setSignupError(error instanceof Error ? error.message : 'Login failed');
+      setSignupError(error instanceof Error ? error.message : 'Signup failed');
     }
   };
 
-  const onAuthSuccess = (user: any, token: any) => {
+  const onAuthSuccess = (user: any, accessToken: any) => {
+    Cookies.set('access_token', accessToken);
     setGameState('menu');
+
+    // Dispatch an event to sync auth state
     window.dispatchEvent(new Event('auth-state-changed'));
-    router.push('/menu');
+
+    // Redirect to the menu page
+    window.location.reload();
   }
 
   return (
@@ -102,7 +98,7 @@ const AuthForms = () => {
                 {loginError && (
                   <Alert variant="destructive" className="mb-4">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{loginError}</AlertDescription>
+                    <AlertDescription className='pt-1'>{loginError}</AlertDescription>
                   </Alert>
                 )}
                 <div className="space-y-4">

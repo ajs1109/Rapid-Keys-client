@@ -12,8 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Settings, LogOut, User, Keyboard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import {authApi} from '@/store/useGameStore';
 import { useAuthStore } from '@/store/authStore';
+import { logout } from '@/lib/api';
 interface HeaderProps {
   username?: string;
 }
@@ -23,10 +23,10 @@ const Header: React.FC<HeaderProps> = ({ username = 'Guest' }) => {
   const router = useRouter();
   const handleLogout = async () => {
     try {
-      await authApi.logout();
+      await logout();
       clearUser();
       console.log('logged out');
-      router.push('/auth');
+      window.location.reload();
     } catch (error) {
       console.error('Logout failed:', error);
     }
