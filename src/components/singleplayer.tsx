@@ -38,25 +38,25 @@ const SinglePlayer = () => {
   
   }, [userInput])
   
-  useEffect(() => {
-    let intervalId;
-    if (isActive && timeLeft > 0) {
-      intervalId = setInterval(() => {
-        setTimeLeft(time => {
-          if (time <= 1) {
-            console.log('1 sec left', userInput);
-            clearInterval(intervalId);
-            console.log('ss', userInput);
-            endGame();
-            return 0;
-          }
-          return time - 1;
-        });
-        
-      }, 1000);
-    }
-    return () => clearInterval(intervalId);
-  }, [isActive]);
+ // Game timer
+useEffect(() => {
+  let intervalId: NodeJS.Timeout | undefined;
+  if (isActive && timeLeft > 0) {
+    intervalId = setInterval(() => {
+      setTimeLeft((time: number) => {
+        if (time <= 1) {
+          clearInterval(intervalId);
+          endGame();
+          return 0;
+        }
+        return time - 1;
+      });
+    }, 1000);
+  }
+  return () => {
+    if (intervalId) clearInterval(intervalId);
+  };
+}, [isActive, timeLeft]);
 
   useEffect(() => {
     if (isActive && userInput.length > 0) {
@@ -91,14 +91,9 @@ const SinglePlayer = () => {
     }
   }, [userInput, isActive]);
 
-  const handleInputChange = (e) => {
-    if (!isActive) {
-      setIsActive(true);
-    }
-    if(timeLeft > 0){
-      console.log('xaxa:',e.target.value);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    if (isActive && timeLeft > 0) {
       setUserInput(e.target.value);
-      console.log('xaxax:', userInput);
     }
   };
   

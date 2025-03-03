@@ -63,6 +63,7 @@ const MultiPlayer: React.FC = () => {
   // Initialize socket connection
   useEffect(() => {
     console.log('user from game store in multi-player:', user);
+    console.log('total characters:', totalCharacters, correctCharacters, correctWords);
     if (!user || !user.id) {
       toast.error('Please log in to play multiplayer mode');
       //router.push('/login');
@@ -191,7 +192,7 @@ const MultiPlayer: React.FC = () => {
       toast.loading("Battle Invitation",{
         description: `${from.username} invited you to a typing battle!`,
         action: (
-          <Button onClick={() => joinRoom(roomId)}>Join</Button>
+          <Button onClick={() => {joinRoom(roomId); toast.dismiss(`invite-${roomId}`)}}>Join</Button>
         ),
         cancel: (
           <Button onClick={() => toast.dismiss(`invite-${roomId}`)}>Ignore</Button>
@@ -239,23 +240,25 @@ const MultiPlayer: React.FC = () => {
     return () => document.removeEventListener('click', handleClick);
   }, []);
   
-  // Game timer
-  useEffect(() => {
-    let intervalId;
-    if (isActive && timeLeft > 0) {
-      intervalId = setInterval(() => {
-        setTimeLeft(time => {
-          if (time <= 1) {
-            clearInterval(intervalId);
-            endGame();
-            return 0;
-          }
-          return time - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(intervalId);
-  }, [isActive]);
+// Game timer
+useEffect(() => {
+  let intervalId: NodeJS.Timeout | undefined;
+  if (isActive && timeLeft > 0) {
+    intervalId = setInterval(() => {
+      setTimeLeft((time: number) => {
+        if (time <= 1) {
+          clearInterval(intervalId);
+          endGame();
+          return 0;
+        }
+        return time - 1;
+      });
+    }, 1000);
+  }
+  return () => {
+    if (intervalId) clearInterval(intervalId);
+  };
+}, [isActive, timeLeft]);
   
   // Calculate WPM and accuracy
   useEffect(() => {
@@ -311,7 +314,7 @@ const MultiPlayer: React.FC = () => {
     }
   }, [userInput, isActive, gameText]);
   
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (isActive && timeLeft > 0) {
       setUserInput(e.target.value);
     }
