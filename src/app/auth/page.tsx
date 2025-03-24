@@ -1,7 +1,7 @@
 'use client'
 
 import React, { FormEvent, useState } from 'react';
-import { signUp, login } from '@/lib/api';
+import { signUp, login, loginTest, loginTester } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, Keyboard } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,7 +9,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import useGameStore from '@/store/useGameStore';
+import axios, { AxiosError } from 'axios';
+import { useAuthStore } from '@/store/useGameStore';
+import { apiService } from '@/utils/apiService';
 
 type AuthEvent = FormEvent<HTMLFormElement> & {
   target: HTMLFormElement & {
@@ -24,22 +26,27 @@ type AuthEvent = FormEvent<HTMLFormElement> & {
 const AuthForms = () => {
   const [loginError, setLoginError] = useState('');
   const [signupError, setSignupError] = useState('');
-  const { setGameState } = useGameStore();
-
+  const [sig, setSig] = useState('');
+  const setStoreToken = useAuthStore(state => state.setToken);
+  const {token} = useAuthStore();
   const handleLogin = async (e: AuthEvent) => { 
     e.preventDefault();
     setLoginError('');
     
     try {
       const formData = new FormData(e.target);
+      console.log('form data:', formData.get('email'), formData.get('password'));
       await login(
         formData.get('email') as string,
         formData.get('password') as string
-      );
+      ).then((res:any) => setStoreToken(res));
+      
+      //return await loginTest().then((res:any) => setStoreToken(res));
 
       onAuthSuccess();
     } catch (error) {
-      setLoginError(error instanceof Error ? error.message : 'Login failed');
+      console.log(error);
+      setLoginError(error instanceof AxiosError ? error.response?.data?.message : 'Login failed');
     }
   };
 
@@ -57,13 +64,11 @@ const AuthForms = () => {
 
       onAuthSuccess();
     } catch (error) {
-      setSignupError(error instanceof Error ? error.message : 'Signup failed');
+      setSignupError(error instanceof AxiosError ? error.response?.data?.message : 'Signup failed');
     }
   };
 
   const onAuthSuccess = () => {
-    setGameState('menu');
-
     // Dispatch an event to sync auth state
     window.dispatchEvent(new Event('auth-state-changed'));
 
@@ -98,14 +103,13 @@ const AuthForms = () => {
                 )}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email">Email or Username</Label>
                     <Input
                       id="login-email"
                       name="email"
-                      type="email"
-                      placeholder="john@example.com"
+                      placeholder="Enter Email or Username"
                       required
-                    />
+                      />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="login-password">Password</Label>
@@ -116,9 +120,17 @@ const AuthForms = () => {
                       required
                     />
                   </div>
+                  
+                  <Input
+                      value={token}
+                    />
+                    <Input
+                      value={sig}
+                    />
                 </div>
                 <CardFooter className="flex justify-end mt-4 px-0">
-                  <Button type="submit" className="bg-violet-500 hover:bg-violet-600">Login</Button>
+                <Button type="submit" className="bg-violet-500 hover:bg-violet-600">Login</Button>
+                <Button onClick={async () => {await loginTester().then(res => setSig(res))}} className="bg-violet-500 hover:bg-violet-600">test</Button>
                 </CardFooter>
               </form>
             </CardContent>
@@ -163,6 +175,7 @@ const AuthForms = () => {
                       required
                     />
                   </div>
+                  
                 </div>
                 <CardFooter className="flex justify-end mt-4 px-0">
                   <Button type="submit" className="bg-violet-500 hover:bg-violet-600">Sign Up</Button>

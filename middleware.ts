@@ -2,21 +2,23 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { decodeToken } from '@/utils/auth';
 import { publicRoutes } from '@/routes';
-import { User } from './types/auth';
+import { User } from '@/types/auth';
+import { useAuthStore } from '@/store/useGameStore';
+import { loginTester } from '@/lib/api';
 
 export async function middleware(request: NextRequest) {
   console.log('middleware activated');
 
   // const accessToken = request.cookies.get('access_token')?.value;
-  const refreshToken = request.cookies.get('refresh_token')?.value;
-
+  //const refreshToken = request.cookies.get('refresh_token')?.value;
+  const token = useAuthStore().token;
   let isAuthenticated = false;
   let userData: User | null = null;
 
-  if(refreshToken){
-    console.log('refresh token:', refreshToken);
+  if(token){
+    console.log('refresh token:', token);
     try {
-      const decoded =await decodeToken(refreshToken);
+      const decoded =await loginTester();
       if(decoded !== null){
       isAuthenticated = true;
       userData = decoded;
@@ -55,5 +57,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/auth', '/menu', '/single-player', '/multi-player', '/'],
+  matcher: ['/'],
 };

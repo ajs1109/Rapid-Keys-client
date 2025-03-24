@@ -1,7 +1,6 @@
-// components/layout/Header.tsx
 'use client'
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,21 +9,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Settings, LogOut, User, Keyboard } from 'lucide-react';
+import { Settings, LogOut, User as UserIcon, Keyboard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
-import { logout } from '@/lib/api';
+import { logout, verifyUser } from '@/lib/api';
+import { useAuthStore } from '@/store/useGameStore';
+import { User } from '@/types/auth';
 interface HeaderProps {
-  username?: string;
+  user: User | null | undefined;
 }
 
-const Header: React.FC<HeaderProps> = ({ username = 'Guest' }) => {
-  const { clearUser } = useAuthStore();
+const Header: React.FC<HeaderProps> = ({user}) => {
   const router = useRouter();
+  const {setStoreUser} = useAuthStore();
+
+  const getUserFromServer = () => {
+    verifyUser().then(res => setStoreUser(res));
+  };
+  useEffect(() => {
+    getUserFromServer();
+    console.log('object', user);
+  }, [])
+  
   const handleLogout = async () => {
     try {
       await logout();
-      clearUser();
+      //clearUser();
       console.log('logged out');
       window.location.reload();
     } catch (error) {
@@ -35,7 +44,7 @@ const Header: React.FC<HeaderProps> = ({ username = 'Guest' }) => {
   const handleEditProfile = () => {
     router.push('/profile');
   };
-  console.log('object', username);
+  
 
   return (
     <header className="border-b bg-white/80 backdrop-blur-sm fixed top-0 left-0 right-0 z-50">
@@ -47,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({ username = 'Guest' }) => {
 
         <div className="flex items-center space-x-4">
           <div className="text-sm text-gray-600">
-            Hi, <span className="font-medium">{username}</span>
+            Hi, <span className="font-medium">{user?.username}</span> 
           </div>
 
           <DropdownMenu>
@@ -58,7 +67,7 @@ const Header: React.FC<HeaderProps> = ({ username = 'Guest' }) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={handleEditProfile} className="cursor-pointer">
-                <User className="mr-2 h-4 w-4" />
+                <UserIcon className="mr-2 h-4 w-4" />
                 <span>Edit Profile</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

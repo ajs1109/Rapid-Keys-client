@@ -4,12 +4,7 @@ import { GameSettings, GameState, GameMode } from '../types/game';
 import { publicRoutes } from '../routes';
 import React from 'react';
 import { decodeToken } from '@/utils/auth';
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-}
+import { User } from '@/types/auth';
 
 interface GameStore {
   gameState: GameState;
@@ -29,6 +24,13 @@ interface GameStore {
   refreshToken: () => Promise<void>; // Add method to refresh access token
 }
 
+interface Store {
+  token: string;
+  user: User | null;
+  setToken: (token: string) => void;
+  setStoreUser: (user: User | null) => void;
+}
+
 const defaultSettings: GameSettings = {
   difficulty: 'normal',
   timeLimit: 60,
@@ -43,156 +45,171 @@ const initialState = {
   isPublicRoute: true, // Default to true, will be updated in useEffect
 };
 
-const useStore = create<GameStore>()(
+export const useAuthStore = create<Store>()(
   persist(
-    (set) => ({
-      ...initialState,
-
-      setGameState: (state) => set({ gameState: state }),
-
-      setGameMode: (mode) => set({ gameMode: mode }),
-
-      updateGameSettings: (settings) =>
-        set((state) => ({
-          gameSettings: { ...state.gameSettings, ...settings },
-        })),
-
-      setAuth: (user, token) =>
-        set({
-          user,
-          token,
-          gameState: 'menu',
-        }),
-
-      setIsPublicRoute: (value) => set({ isPublicRoute: value }),
-
-      logout: async () => {
-        try {
-          const response = await fetch('/api/auth/logout', {
-            method: 'POST',
-            credentials: 'include', // Important for cookie handling
-          });
-
-          if (!response.ok) {
-            throw new Error('Logout failed');
-          }
-
-          // Clear local state
-          set({
-            ...initialState,
-            gameSettings: defaultSettings,
-          });
-        } catch (error) {
-          console.error('Logout error:', error);
-          // Still clear local state even if API call fails
-          set({
-            ...initialState,
-            gameSettings: defaultSettings,
-          });
-        }
-      },
-
-      reset: () => set(initialState),
-
-      // Method to refresh access token using refresh_token
-      refreshToken: async () => {
-        try {
-          const response = await fetch('/api/auth/refresh', {
-            method: 'POST',
-            credentials: 'include', // Include cookies
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to refresh token');
-          }
-
-          const data = await response.json();
-          const { accessToken, user } = data;
-
-          set({
-            token: accessToken,
-            user,
-          });
-        } catch (error) {
-          console.error('Token refresh failed:', error);
-          set({
-            token: null,
-            user: null,
-          });
-        }
-      },
+    set => ({
+      token: "",
+      setToken: (token) => set({token}),
+      user: null,
+      setStoreUser: (user) => set({user})
     }),
     {
-      name: 'game-storage',
+      name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-
-      partialize: (state) => ({
-        gameSettings: state.gameSettings,
-        token: state.token,
-        user: state.user,
-      }),
     }
   )
 );
 
-// Custom hook to handle route checking
-export const useRouteCheck = () => {
-  const setIsPublicRoute = useStore((state) => state.setIsPublicRoute);
+// const useStore = create<GameStore>()(
+//   persist(
+//     (set) => ({
+//       ...initialState,
 
-  React.useEffect(() => {
-    const pathname = window.location.pathname;
-    const isPublic = publicRoutes.includes(pathname);
-    setIsPublicRoute(isPublic);
-  }, []);
-};
+//       setGameState: (state) => set({ gameState: state }),
 
-// Custom hook to initialize user data from refresh_token
-export const useInitializeAuth = () => {
-  console.log('into useInitializeAuth');
-  const setAuth = useStore((state) => state.setAuth);
-  const refreshToken = useStore((state) => state.refreshToken);
+//       setGameMode: (mode) => set({ gameMode: mode }),
 
-  React.useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        // Fetch refresh_token from cookies
-        const refreshTokenCookie = document.cookie
-          .split('; ')
-          .find((row) => row.startsWith('refresh_token='))
-          ?.split('=')[1];
+//       updateGameSettings: (settings) =>
+//         set((state) => ({
+//           gameSettings: { ...state.gameSettings, ...settings },
+//         })),
 
-        if (refreshTokenCookie) {
-          console.log('refresh token:', refreshTokenCookie);
-          const decoded = await decodeToken(refreshTokenCookie);
-          if (decoded) {
-            setAuth(decoded, refreshTokenCookie);
-          } else {
-            console.log('refreshing access token in useInitializeAuth');
-            // Attempt to refresh the access token
-            await refreshToken();
-          }
-        }
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-      }
-    };
+//       setAuth: (user, token) =>
+//         set({
+//           user,
+//           token,
+//           gameState: 'menu',
+//         }),
 
-    initializeAuth();
-  }, []);
-};
+//       setIsPublicRoute: (value) => set({ isPublicRoute: value }),
 
-export const useAuth = () =>
-  useStore((state) => ({
-    user: state.user,
-    token: state.token,
-    isAuthenticated: state.token !== null,
-    setAuth: state.setAuth,
-    logout: state.logout,
-  }));
+//       logout: async () => {
+//         try {
+//           const response = await fetch('/api/auth/logout', {
+//             method: 'POST',
+//             credentials: 'include', // Important for cookie handling
+//           });
 
-export const useGameState = () => useStore((state) => state.gameState);
-export const useGameMode = () => useStore((state) => state.gameMode);
-export const useGameSettings = () => useStore((state) => state.gameSettings);
-export const useIsPublicRoute = () => useStore((state) => state.isPublicRoute);
+//           if (!response.ok) {
+//             throw new Error('Logout failed');
+//           }
 
-export default useStore;
+//           // Clear local state
+//           set({
+//             ...initialState,
+//             gameSettings: defaultSettings,
+//           });
+//         } catch (error) {
+//           console.error('Logout error:', error);
+//           // Still clear local state even if API call fails
+//           set({
+//             ...initialState,
+//             gameSettings: defaultSettings,
+//           });
+//         }
+//       },
+
+//       reset: () => set(initialState),
+
+//       // Method to refresh access token using refresh_token
+//       refreshToken: async () => {
+//         try {
+//           const response = await fetch('/api/auth/refresh', {
+//             method: 'POST',
+//             credentials: 'include', // Include cookies
+//           });
+
+//           if (!response.ok) {
+//             throw new Error('Failed to refresh token');
+//           }
+
+//           const data = await response.json();
+//           const { accessToken, user } = data;
+
+//           set({
+//             token: accessToken,
+//             user,
+//           });
+//         } catch (error) {
+//           console.error('Token refresh failed:', error);
+//           set({
+//             token: null,
+//             user: null,
+//           });
+//         }
+//       },
+//     }),
+//     {
+//       name: 'game-storage',
+//       storage: createJSONStorage(() => localStorage),
+
+//       partialize: (state) => ({
+//         gameSettings: state.gameSettings,
+//         token: state.token,
+//         user: state.user,
+//       }),
+//     }
+//   )
+// );
+
+// // Custom hook to handle route checking
+// export const useRouteCheck = () => {
+//   const setIsPublicRoute = useStore((state) => state.setIsPublicRoute);
+
+//   React.useEffect(() => {
+//     const pathname = window.location.pathname;
+//     const isPublic = publicRoutes.includes(pathname);
+//     setIsPublicRoute(isPublic);
+//   }, []);
+// };
+
+// // Custom hook to initialize user data from refresh_token
+// export const useInitializeAuth = () => {
+//   console.log('into useInitializeAuth');
+//   const setAuth = useStore((state) => state.setAuth);
+//   const refreshToken = useStore((state) => state.refreshToken);
+
+//   React.useEffect(() => {
+//     const initializeAuth = async () => {
+//       try {
+//         // Fetch refresh_token from cookies
+//         const refreshTokenCookie = document.cookie
+//           .split('; ')
+//           .find((row) => row.startsWith('refresh_token='))
+//           ?.split('=')[1];
+
+//         if (refreshTokenCookie) {
+//           console.log('refresh token:', refreshTokenCookie);
+//           const decoded = await decodeToken(refreshTokenCookie);
+//           if (decoded) {
+//             setAuth(decoded, refreshTokenCookie);
+//           } else {
+//             console.log('refreshing access token in useInitializeAuth');
+//             // Attempt to refresh the access token
+//             await refreshToken();
+//           }
+//         }
+//       } catch (error) {
+//         console.error('Failed to initialize auth:', error);
+//       }
+//     };
+
+//     initializeAuth();
+//   }, []);
+// };
+
+// export const useAuth = () =>
+//   useStore((state) => ({
+//     user: state.user,
+//     token: state.token,
+//     isAuthenticated: state.token !== null,
+//     setAuth: state.setAuth,
+//     logout: state.logout,
+//   }));
+
+// export const useGameState = () => useStore((state) => state.gameState);
+// export const useGameMode = () => useStore((state) => state.gameMode);
+// export const useGameSettings = () => useStore((state) => state.gameSettings);
+// export const useIsPublicRoute = () => useStore((state) => state.isPublicRoute);
+
+// export default useStore;
