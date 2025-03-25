@@ -98,12 +98,12 @@ const AuthForms = () => {
                 )}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email">Email or Username</Label>
                     <Input
                       id="login-email"
                       name="email"
-                      type="email"
-                      placeholder="john@example.com"
+                      type="text"
+                      placeholder="Enter Email / Username"
                       required
                     />
                   </div>

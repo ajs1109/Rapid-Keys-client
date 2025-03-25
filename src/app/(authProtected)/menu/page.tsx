@@ -8,7 +8,7 @@ import type { GameMode } from '@/types/game';
 import { useRouter } from 'next/navigation';
 
 const GameModeSelection: React.FC = () => {
-  const { setGameState, setGameMode, isPublicRoute } = useGameStore();
+  const { setGameState, setGameMode } = useGameStore();
   const router = useRouter();
   const handleModeSelect = (mode: GameMode) => {
     if (mode) {
@@ -18,7 +18,6 @@ const GameModeSelection: React.FC = () => {
     }
   };
 
-  console.log('is public route', isPublicRoute);
   const GameCard: React.FC<{
     mode: GameMode;
     icon: React.ReactNode;

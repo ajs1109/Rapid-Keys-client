@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 export class ApiService {
   private axiosInstance: AxiosInstance;
 
-  constructor(baseURL: string = process.env.SERVER_URI || 'http://localhost:5000') {
+  constructor(baseURL: string = process.env.SERVER_URI || 'http://localhost:3000') {
     baseURL = `${baseURL}/api`;
     this.axiosInstance = axios.create({
       baseURL,
@@ -50,7 +50,7 @@ export class ApiService {
             }
           }
         }
-        const errorMessage = error.response?.data?.message || 'An unexpected error occurred';
+        const errorMessage = error.response?.data?.message || 'An unexpected error occurred...';
         return Promise.reject(new Error(errorMessage));
       }
     );

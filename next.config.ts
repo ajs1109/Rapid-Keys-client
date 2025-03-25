@@ -1,14 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:5000/:path*' // Replace with your Express server URL
-      }
-    ];
-  }
+  // async rewrites() {
+  //   return [
+  //     {
+  //       source: '/api/:path*',
+  //       destination: 'http://localhost:5000/:path*' // Replace with your Express server URL
+  //     }
+  //   ];
+  // }
 };
 
 export default nextConfig;

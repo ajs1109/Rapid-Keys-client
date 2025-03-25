@@ -1,9 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { GameSettings, GameState, GameMode } from '../types/game';
-import { publicRoutes } from '../routes';
-import React from 'react';
-import { decodeToken } from '@/utils/auth';
 
 interface User {
   id: string;
@@ -22,7 +19,8 @@ interface GameStore {
   setGameState: (state: GameState) => void;
   setGameMode: (mode: GameMode) => void;
   updateGameSettings: (settings: Partial<GameSettings>) => void;
-  setAuth: (user: User, token: string) => void;
+  setAuthUser: (user: User) => void;
+  setAuthToken: (token: string) => void;
   logout: () => void;
   reset: () => void;
   setIsPublicRoute: (value: boolean) => void;
@@ -57,39 +55,45 @@ const useStore = create<GameStore>()(
           gameSettings: { ...state.gameSettings, ...settings },
         })),
 
-      setAuth: (user, token) =>
+      setAuthUser: (user) =>
         set({
           user,
-          token,
           gameState: 'menu',
+        }),
+
+        
+      setAuthToken: (token) =>
+        set({
+          token
         }),
 
       setIsPublicRoute: (value) => set({ isPublicRoute: value }),
 
       logout: async () => {
-        try {
-          const response = await fetch('/api/auth/logout', {
-            method: 'POST',
-            credentials: 'include', // Important for cookie handling
-          });
+        // try {
+        //   const response = await fetch('/api/auth/logout', {
+        //     method: 'POST',
+        //     credentials: 'include', // Important for cookie handling
+        //   });
 
-          if (!response.ok) {
-            throw new Error('Logout failed');
-          }
+        //   if (!response.ok) {
+        //     throw new Error('Logout failed');
+        //   }
 
-          // Clear local state
-          set({
-            ...initialState,
-            gameSettings: defaultSettings,
-          });
-        } catch (error) {
-          console.error('Logout error:', error);
-          // Still clear local state even if API call fails
-          set({
-            ...initialState,
-            gameSettings: defaultSettings,
-          });
-        }
+        //   // Clear local state
+        //   set({
+        //     ...initialState,
+        //     gameSettings: defaultSettings,
+        //   });
+        // } catch (error) {
+        //   console.error('Logout error:', error);
+        //   // Still clear local state even if API call fails
+        //   set({
+        //     ...initialState,
+        //     gameSettings: defaultSettings,
+        //   });
+        // }
+        document.cookie = "access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;";
       },
 
       reset: () => set(initialState),
@@ -123,7 +127,7 @@ const useStore = create<GameStore>()(
       },
     }),
     {
-      name: 'game-storage',
+      name: 'rapid-keys-storage',
       storage: createJSONStorage(() => localStorage),
 
       partialize: (state) => ({
@@ -134,65 +138,67 @@ const useStore = create<GameStore>()(
     }
   )
 );
-
 // Custom hook to handle route checking
-export const useRouteCheck = () => {
-  const setIsPublicRoute = useStore((state) => state.setIsPublicRoute);
+// export const useRouteCheck = () => {
+//   const setIsPublicRoute = useStore((state) => state.setIsPublicRoute);
 
-  React.useEffect(() => {
-    const pathname = window.location.pathname;
-    const isPublic = publicRoutes.includes(pathname);
-    setIsPublicRoute(isPublic);
-  }, []);
-};
+//   React.useEffect(() => {
+//     const pathname = window.location.pathname;
+//     const isPublic = publicRoutes.includes(pathname);
+//     setIsPublicRoute(isPublic);
+//   }, []);
+// };
 
-// Custom hook to initialize user data from refresh_token
-export const useInitializeAuth = () => {
-  console.log('into useInitializeAuth');
-  const setAuth = useStore((state) => state.setAuth);
-  const refreshToken = useStore((state) => state.refreshToken);
+// // Custom hook to initialize user data from refresh_token
+// export const useInitializeAuth = () => {
+//   console.log('into useInitializeAuth');
+//   const setAuthUser = useStore((state) => state.setAuthUser);
+//   const setAuthToken = useStore((state) => state.setAuthToken);
+//   const refreshToken = useStore((state) => state.refreshToken);
 
-  React.useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        // Fetch refresh_token from cookies
-        const refreshTokenCookie = document.cookie
-          .split('; ')
-          .find((row) => row.startsWith('refresh_token='))
-          ?.split('=')[1];
+//   React.useEffect(() => {
+//     const initializeAuth = async () => {
+//       try {
+//         // Fetch refresh_token from cookies
+//         const refreshTokenCookie = document.cookie
+//           .split('; ')
+//           .find((row) => row.startsWith('refresh_token='))
+//           ?.split('=')[1];
 
-        if (refreshTokenCookie) {
-          console.log('refresh token:', refreshTokenCookie);
-          const decoded = await decodeToken(refreshTokenCookie);
-          if (decoded) {
-            setAuth(decoded, refreshTokenCookie);
-          } else {
-            console.log('refreshing access token in useInitializeAuth');
-            // Attempt to refresh the access token
-            await refreshToken();
-          }
-        }
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-      }
-    };
+//         if (refreshTokenCookie) {
+//           console.log('refresh token:', refreshTokenCookie);
+//           const decoded = await decodeToken(refreshTokenCookie);
+//           if (decoded) {
+//             setAuthUser(decoded);
+//             setAuthToken(refreshTokenCookie);
+//           } else {
+//             console.log('refreshing access token in useInitializeAuth');
+//             // Attempt to refresh the access token
+//             await refreshToken();
+//           }
+//         }
+//       } catch (error) {
+//         console.error('Failed to initialize auth:', error);
+//       }
+//     };
 
-    initializeAuth();
-  }, []);
-};
+//     initializeAuth();
+//   }, []);
+// };
 
-export const useAuth = () =>
-  useStore((state) => ({
-    user: state.user,
-    token: state.token,
-    isAuthenticated: state.token !== null,
-    setAuth: state.setAuth,
-    logout: state.logout,
-  }));
+//export const useAuth = () =>
+  // useStore((state) => ({
+  //   user: state.user,
+  //   token: state.token,
+  //   isAuthenticated: state.token !== null,
+  //   setAuthUser: state.setAuthUser,
+  //   setAuthToken: state.setAuthToken,
+  //   logout: state.logout,
+  // }));
 
-export const useGameState = () => useStore((state) => state.gameState);
-export const useGameMode = () => useStore((state) => state.gameMode);
-export const useGameSettings = () => useStore((state) => state.gameSettings);
-export const useIsPublicRoute = () => useStore((state) => state.isPublicRoute);
+  export default useStore;
+// export const useGameState = () => useStore((state) => state.gameState);
+// export const useGameMode = () => useStore((state) => state.gameMode);
+// export const useGameSettings = () => useStore((state) => state.gameSettings);
+// export const useIsPublicRoute = () => useStore((state) => state.isPublicRoute);   
 
-export default useStore;

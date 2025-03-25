@@ -2,13 +2,14 @@ import useStore from '@/store/useGameStore';
 import { AuthResponse, User } from '@/types/auth';
 import { apiService } from '@/utils/apiService';
 
-const {setAuth} = useStore.getState();
+const {setAuthUser, setAuthToken} = useStore.getState();
 
 export const login = async (email: string, password: string): Promise<AuthResponse> => {
   try {
     const data = await apiService.post<AuthResponse>('/auth/login', { email, password });
     console.log('login response:', data);
-    setAuth(data.user, data.accessToken);
+    //setAuthUser(data.user);
+    //setAuthToken(data.token);
     return data;
   } catch (error) {
     throw error;
@@ -18,17 +19,23 @@ export const login = async (email: string, password: string): Promise<AuthRespon
 export const signUp = async (username: string, email: string, password: string): Promise<AuthResponse> => {
   try {
     const data = await apiService.post<AuthResponse>('/auth/signup', { username, email, password });
-    setAuth(data.user, data.token);
+    //setAuthUser(data.user);
+    //setAuthToken(data.token);
     return data;
   } catch (error) {
     throw error;
   }
 };
 
-export const logout = async (): Promise<void> => {
+export const verifyUser = async (token: string): Promise<{message:string, user?:User}> => {
   try {
-    await apiService.post('/auth/logout', {});
-    useStore.getState().logout();
+    const data = await apiService.post<{message:string, user?:User}>('/auth/verify', {token});
+    // console.log('verify response:', data);
+    if(data.user){
+      //setAuthUser(data.user);
+    }
+    //setAuthToken(token)
+    return data;
   } catch (error) {
     throw error;
   }
@@ -82,6 +89,15 @@ export const verifyTokenFromServer = async (refreshToken: string): Promise<{mess
 export const loggedInUserData = async(): Promise<{user?: User}> => {
   try{
     const data = await apiService.get<{user?: User}>('/auth/user');
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export const generateWords = async(count: number): Promise<{words: string}> => {
+  try{
+    const data = await apiService.post<{words: string}>(`/game/generate-words`, {count});
     return data;
   } catch (error) {
     throw error;
