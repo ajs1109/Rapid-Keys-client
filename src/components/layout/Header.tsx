@@ -12,21 +12,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Settings, LogOut, User, Keyboard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/authStore';
-import { logout } from '@/lib/api';
+import useStore from '@/store/useGameStore';
+
 interface HeaderProps {
   username?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ username = 'Guest' }) => {
-  const { clearUser } = useAuthStore();
+  const { logout } = useStore()
   const router = useRouter();
   const handleLogout = async () => {
     try {
-      await logout();
-      clearUser();
+      logout();
       console.log('logged out');
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       console.error('Logout failed:', error);
     }

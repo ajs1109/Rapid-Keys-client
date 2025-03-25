@@ -6,10 +6,13 @@ import { Timer, RotateCcw, Home, Trophy, Target, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import useGameStore from '@/store/useGameStore';
 import { useRouter } from 'next/navigation';
+import { generateWords } from '@/lib/api';
 
 const SAMPLE_TEXT = `Technology continues to transform the way we live and work in unprecedented ways. As artificial intelligence becomes more sophisticated, it opens up new possibilities for innovation and efficiency. However, we must carefully consider the ethical implications of these advances. The rapid pace of digital transformation requires us to adapt quickly while maintaining our human connections. Despite the challenges, this era of technological revolution presents exciting opportunities for those who are willing to embrace change and learn continuously. The future belongs to those who can balance technical skills with human creativity.`;
 const GAME_TIME = 5;
+
 const SinglePlayer = () => {
+  const [text, setText] = useState(SAMPLE_TEXT);
   const [userInput, setUserInput] = useState('');
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
@@ -23,6 +26,15 @@ const SinglePlayer = () => {
   
   const { setGameState, setGameMode } = useGameStore();
   const router = useRouter();
+  const getWords = async () => {
+    try {
+      console.log('in try');
+      const {words} = await generateWords(200);
+      setText(words);
+    } catch (error) {
+      console.log("Error occured in singleplayer while generating words from server", error);
+    }
+  }
   useEffect(() => {
     hiddenInputRef.current?.focus();
     
@@ -30,101 +42,95 @@ const SinglePlayer = () => {
       hiddenInputRef.current?.focus();
     };
     document.addEventListener('click', handleClick);
+    getWords();
+    
     return () => document.removeEventListener('click', handleClick);
   }, []);
 
+  // Game timer
   useEffect(() => {
-    console.log('userInput:',userInput);
-  
-  }, [userInput])
-  
- // Game timer
-useEffect(() => {
-  let intervalId: NodeJS.Timeout | undefined;
-  if (isActive && timeLeft > 0) {
-    intervalId = setInterval(() => {
-      setTimeLeft((time: number) => {
-        if (time <= 1) {
-          clearInterval(intervalId);
-          endGame();
-          return 0;
-        }
-        return time - 1;
-      });
-    }, 1000);
-  }
-  return () => {
-    if (intervalId) clearInterval(intervalId);
-  };
-}, [isActive, timeLeft]);
+    let intervalId: NodeJS.Timeout | undefined;
+    if (isActive && timeLeft > 0) {
+      intervalId = setInterval(() => {
+        setTimeLeft((time: number) => {
+          if (time <= 1) {
+            clearInterval(intervalId);
+            endGame();
+            return 0;
+          }
+          return time - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isActive, timeLeft]);
 
   useEffect(() => {
-    if (isActive && userInput.length > 0) {
-      console.log('object:', userInput);
-      const minutes = (GAME_TIME - timeLeft) / 60;
-      
-      let correctChars = 0;
-      for (let i = 0; i < userInput.length; i++) {
-        if (userInput[i] === SAMPLE_TEXT[i]) correctChars++;
-      }
-
-      let correctWordsCount = 0;
-      for(let i = 0; i < userInput.length; i++) {
-        let wordFlag: boolean = true;
-        if(userInput[i] !== SAMPLE_TEXT[i]){
-          wordFlag = false;
-        }
-        if(i < SAMPLE_TEXT.length && userInput[i] === SAMPLE_TEXT[i] && userInput[i] === ' ' && wordFlag) {
-          correctWordsCount++;
-          wordFlag = true;
-        }
-      }
-      setCorrectWords(correctWordsCount);
-      setCorrectCharacters(correctChars);
-      setTotalCharacters(userInput.length);
-      const currentAccuracy = Math.round((correctChars / userInput.length) * 100);
-      
-      const currentWpm = Math.round(correctWords / Math.max(minutes, 1/60));
-      setWpm(currentWpm);
-      setAccuracy(currentAccuracy);
-      console.log('use effect ended ', userInput);
+    if (!isActive && userInput.length > 0) {
+      setIsActive(true);
     }
   }, [userInput, isActive]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  useEffect(() => {
     if (isActive && timeLeft > 0) {
+      const minutes = (GAME_TIME - timeLeft) / 60;
+      
+      let correctChars = 0;
+      let correctWordsCount = 0;
+      let currentWord = '';
+      let expectedWord = '';
+      
+      for (let i = 0; i < userInput.length; i++) {
+        if (userInput[i] === text[i]) {
+          correctChars++;
+          
+          // Word tracking
+          currentWord += userInput[i];
+          expectedWord += text[i];
+          
+          // Check for complete word
+          if (userInput[i] === ' ') {
+            if (currentWord.trim() === expectedWord.trim()) {
+              correctWordsCount++;
+            }
+            currentWord = '';
+            expectedWord = '';
+          }
+        } else {
+          currentWord = '';
+          expectedWord = '';
+        }
+      }
+
+      setCorrectWords(correctWordsCount);
+      setCorrectCharacters(correctChars);
+      setTotalCharacters(userInput.length);
+      
+      const currentAccuracy = userInput.length > 0 
+        ? Math.round((correctChars / userInput.length) * 100) 
+        : 100;
+      
+      const currentWpm = Math.round(correctWordsCount / Math.max(minutes, 1/60));
+      
+      setWpm(currentWpm);
+      setAccuracy(currentAccuracy);
+    }
+  }, [userInput, isActive, timeLeft]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    if (timeLeft > 0) {
       setUserInput(e.target.value);
     }
   };
   
   const endGame = () => {
-    console.log('end game:',userInput);
     setIsActive(false);
     setShowResults(true);
-    
-    // const timeInMinutes = (60 - timeLeft) / 60; 
-    // const wordCount = userInput.trim().split(/\s+/).filter(word => word.length > 0).length;
-    // const finalWpm = Math.round(wordCount / Math.max(timeInMinutes, 1/60));
-    
-    // let correctChars = 0;
-    // for (let i = 0; i < userInput.length; i++) {
-    //   if (userInput[i] === SAMPLE_TEXT[i]) {
-    //     correctChars++;
-    //   }
-    // }
-    
-    // setWpm(finalWpm);
-    // setCorrectCharacters(correctChars);
-    // setTotalCharacters(userInput.length);
-    // if (userInput.length > 0) {
-    //   setAccuracy(Math.round((correctChars / userInput.length) * 100));
-    // } else {
-    //   setAccuracy(0);
-    // }
   };
 
   const resetGame = () => {
-    console.log('reset game called');
     setUserInput('');
     setIsActive(false);
     setTimeLeft(GAME_TIME);
@@ -133,6 +139,8 @@ useEffect(() => {
     setShowResults(false);
     setTotalCharacters(0);
     setCorrectCharacters(0);
+    setCorrectWords(0);
+    getWords();
     hiddenInputRef.current?.focus();
   };
 
@@ -143,15 +151,24 @@ useEffect(() => {
   }
 
   const renderText = () => {
-    return SAMPLE_TEXT.split('').map((char, index) => {
+    return text.split('').map((char, index) => {
       let className = 'transition-colors duration-150 text-lg font-mono ';
+      
       if (index < userInput.length) {
-        className += userInput[index] === char 
-          ? 'text-green-500 font-bold' 
-          : 'text-red-500 bg-red-100';
-      } else if (index === userInput.length) {
+        // Correct character
+        if (userInput[index] === char) {
+          className += 'text-green-500 font-bold';
+        } 
+        // Incorrect character
+        else {
+          className += 'text-red-500 bg-red-100';
+        }
+      } 
+      // Current character (cursor position)
+      else if (index === userInput.length) {
         className += 'bg-gray-200 animate-pulse';
       }
+      
       return (
         <span key={index} className={className}>
           {char}
@@ -161,18 +178,12 @@ useEffect(() => {
   };
 
   const ResultsPopup = () => {
-    // const finalStats = {
-    //   wpm: wpm,
-    //   accuracy: accuracy,
-    //   correctChars: correctCharacters,
-    //   totalChars: totalCharacters
-    // };
     return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm">
       <Card className="w-full max-w-md p-8 bg-white bg-opacity-90 backdrop-blur">
         <div className="text-center space-y-6">
           <Trophy className="h-16 w-16 text-yellow-500 mx-auto" />
-          <h2 className="text-2xl font-bold text-gray-800">Time &apos; s Up!</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Time&apos;s Up!</h2>
           
           <div className="grid grid-cols-2 gap-4 my-8">
             <div className="space-y-1">

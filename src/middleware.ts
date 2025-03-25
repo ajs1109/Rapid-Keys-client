@@ -1,31 +1,28 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { decodeToken } from '@/utils/auth';
-import { publicRoutes } from '@/routes';
+import { NextRequest, NextResponse } from 'next/server';
 import { User } from './types/auth';
+import { verifyUser } from './lib/api';
+import { publicRoutes } from './routes';
+//import useStore from './store/useGameStore';
 
 export async function middleware(request: NextRequest) {
-  console.log('middleware activated');
-
-  // const accessToken = request.cookies.get('access_token')?.value;
-  const refreshToken = request.cookies.get('refresh_token')?.value;
-
+  const accessToken = request.cookies.get('access_token')?.value;
   let isAuthenticated = false;
   let userData: User | null = null;
-
-  if(refreshToken){
-    console.log('refresh token:', refreshToken);
-    try {
-      const decoded =await decodeToken(refreshToken);
-      if(decoded !== null){
-      isAuthenticated = true;
-      userData = decoded;
-      }
-    } catch (error) {
-      console.log('Refresh token expired or invalid:', error);
-    }
+  try {
+    const { user } = await verifyUser(accessToken ?? '');
+  if(user){
+    isAuthenticated = true;
+    userData = user;
+    //setAuthUser(user);
+    console.log('found user');
   }
-
+  else{
+    console.log('no user found');
+  } 
+  } catch (error) {
+    console.log('no user found error');
+  }
+  
   const path = request.nextUrl.pathname;
   const isAuthPath = publicRoutes.includes(path);
   const isEmptyPath = path === '/';
@@ -37,21 +34,7 @@ export async function middleware(request: NextRequest) {
   if (isAuthenticated && (isAuthPath || isEmptyPath)) {
     return NextResponse.redirect(new URL('/menu', request.url));
   }
-
-  const response = NextResponse.next();
-
-  if (isAuthenticated && userData) {
-    response.headers.set(
-      'x-user-data',
-      JSON.stringify({
-        id: userData.id,
-        username: userData.username,
-        email: userData.email,
-      })
-    );
-  }
-
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
