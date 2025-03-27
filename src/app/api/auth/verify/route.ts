@@ -2,6 +2,7 @@ import { connect } from "@/dbConfig/dbConfig";
 import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from 'jsonwebtoken';
+import { User } from "@/types/auth";
 
 connect();
 
@@ -29,9 +30,9 @@ export async function POST(req: NextRequest) {
     const decoded = await verifyToken(token, process.env.JWT_SECRET as string);
 
     const user = await UserModel.findById(decoded?.id);
-
-    if (user) {
-      return NextResponse.json({ user });
+    if (user) { 
+      console.log('from verify:', user);
+      return NextResponse.json({ user:{id: user._id as string, username: user.username, email: user.email, highestWPM: user.highestWPM, highestAccuracy: user.highestAccuracy, gamesPlayed: user.gamesPlayed } });
     }
 
     return NextResponse.json({ message: "User not found" }, { status: 404 });

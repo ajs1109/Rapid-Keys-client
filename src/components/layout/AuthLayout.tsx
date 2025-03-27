@@ -15,9 +15,11 @@ interface AuthLayoutProps {
 }
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children, user }) => {
-  const {setAuthUser} = useStore();
+  const {setAuthUser, setGamesPlayed, setHighScore} = useStore();
   useEffect(() => {
     setAuthUser(user);
+    setGamesPlayed(user.gamesPlayed);
+    setHighScore(user.highestWPM, user.highestAccuracy);
   }, [])
   return (
     <div className="min-h-screen flex flex-col">

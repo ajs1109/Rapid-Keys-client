@@ -1,12 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { GameSettings, GameState, GameMode } from '../types/game';
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-}
+import { User } from '@/types/auth';
 
 interface GameStore {
   gameState: GameState;
@@ -14,16 +9,19 @@ interface GameStore {
   gameSettings: GameSettings;
   token: string | null;
   user: User | null;
-  isPublicRoute: boolean;
+  gamesPlayed: number;
+  highestWPM: number;
+  highestAccuracy: number;
 
   setGameState: (state: GameState) => void;
   setGameMode: (mode: GameMode) => void;
   updateGameSettings: (settings: Partial<GameSettings>) => void;
   setAuthUser: (user: User) => void;
   setAuthToken: (token: string) => void;
+  setGamesPlayed: (count: number) => void;
+  setHighScore: (WPM: number, Accuracy: number) => void;
   logout: () => void;
   reset: () => void;
-  setIsPublicRoute: (value: boolean) => void;
   refreshToken: () => Promise<void>; // Add method to refresh access token
 }
 
@@ -38,7 +36,9 @@ const initialState = {
   gameSettings: defaultSettings,
   token: null,
   user: null,
-  isPublicRoute: true, // Default to true, will be updated in useEffect
+  gamesPlayed: 0,
+  highestWPM: 0,
+  highestAccuracy: 0
 };
 
 const useStore = create<GameStore>()(
@@ -60,39 +60,17 @@ const useStore = create<GameStore>()(
           user,
           gameState: 'menu',
         }),
-
-        
+ 
       setAuthToken: (token) =>
         set({
           token
         }),
 
-      setIsPublicRoute: (value) => set({ isPublicRoute: value }),
+      setGamesPlayed: (count) => set({gamesPlayed: count}),
+
+      setHighScore: (WPM, Accuracy) => set({highestWPM: WPM, highestAccuracy: Accuracy}),
 
       logout: async () => {
-        // try {
-        //   const response = await fetch('/api/auth/logout', {
-        //     method: 'POST',
-        //     credentials: 'include', // Important for cookie handling
-        //   });
-
-        //   if (!response.ok) {
-        //     throw new Error('Logout failed');
-        //   }
-
-        //   // Clear local state
-        //   set({
-        //     ...initialState,
-        //     gameSettings: defaultSettings,
-        //   });
-        // } catch (error) {
-        //   console.error('Logout error:', error);
-        //   // Still clear local state even if API call fails
-        //   set({
-        //     ...initialState,
-        //     gameSettings: defaultSettings,
-        //   });
-        // }
         document.cookie = "access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;";
       },
 
