@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
-import { Timer, RotateCcw, Home, Trophy, Target, RefreshCw } from 'lucide-react';
+import { Timer, RotateCcw, Home, Trophy, Target, RefreshCw, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useGameStore from '@/store/useGameStore';
 import { useRouter } from 'next/navigation';
@@ -128,10 +128,19 @@ const SinglePlayer = () => {
   
   const endGame = async () => {
     setIsActive(false);
-    if(wpm *accuracy > highestAccuracy * highestWPM || (wpm * accuracy === (highestWPM * highestAccuracy) && wpm > highestWPM)){
+    
+    // Updated high score logic
+    const currentScore = wpm * accuracy;
+    const highestScore = highestWPM * highestAccuracy;
+    
+    if (
+      currentScore > highestScore || 
+      (currentScore === highestScore && wpm > highestWPM)
+    ) {
       setHighScore(wpm, accuracy);
       setIsHighScore(true);
     }
+    
     setGamesPlayed(gamesPlayed + 1);
     try {
       await updateScore(user?.id ?? "", wpm, accuracy, gamesPlayed);
@@ -197,6 +206,13 @@ const SinglePlayer = () => {
           <Trophy className="h-16 w-16 text-yellow-500 mx-auto" />
           <h2 className="text-2xl font-bold text-gray-800">Time&apos;s Up!</h2>
           
+          {isHighScore && (
+            <div className=" p-4 rounded-lg flex items-center justify-center space-x-2 mb-4">
+              <Star className="h-6 w-6 text-yellow-500" />
+              <p className="font-semibold">New Personal High Score!</p>
+              <Star className="h-6 w-6 text-yellow-500" />
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4 my-8">
             <div className="space-y-1">
               <p className="text-3xl font-bold text-indigo-600">{wpm}</p>
@@ -216,7 +232,24 @@ const SinglePlayer = () => {
             </div>
           </div>
           
-          <div className="flex gap-4 justify-center">
+          {/* Previous High Scores */}
+          {!isHighScore && (
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-semibold mb-2 text-gray-700">Your Best Scores</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-sm text-gray-600">Highest WPM</p>
+                <p className="text-2xl font-bold text-indigo-600">{highestWPM}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Highest Accuracy</p>
+                <p className="text-2xl font-bold text-indigo-600">{highestAccuracy}%</p>
+              </div>
+            </div>
+          </div>
+          )}
+          
+          <div className="flex gap-4 justify-center mt-6">
             <Button 
               onClick={homeButton}
               className="flex items-center gap-2"
