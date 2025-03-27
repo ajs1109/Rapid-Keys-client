@@ -6,7 +6,7 @@ import { Timer, RotateCcw, Home, Trophy, Target, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import useGameStore from '@/store/useGameStore';
 import { useRouter } from 'next/navigation';
-import { generateWords } from '@/lib/api';
+import { generateWords, updateScore } from '@/lib/api';
 
 const SAMPLE_TEXT = `Technology continues to transform the way we live and work in unprecedented ways. As artificial intelligence becomes more sophisticated, it opens up new possibilities for innovation and efficiency. However, we must carefully consider the ethical implications of these advances. The rapid pace of digital transformation requires us to adapt quickly while maintaining our human connections. Despite the challenges, this era of technological revolution presents exciting opportunities for those who are willing to embrace change and learn continuously. The future belongs to those who can balance technical skills with human creativity.`;
 const GAME_TIME = 5;
@@ -19,12 +19,13 @@ const SinglePlayer = () => {
   const [wpm, setWpm] = useState(0);
   const [accuracy, setAccuracy] = useState(100);
   const [showResults, setShowResults] = useState(false);
+  const [isHighScore, setIsHighScore] = useState(false);
   const [totalCharacters, setTotalCharacters] = useState(0);
   const [correctCharacters, setCorrectCharacters] = useState(0);
   const [correctWords, setCorrectWords] = useState(0);
   const hiddenInputRef = useRef<HTMLInputElement>(null);
   
-  const { setGameState, setGameMode } = useGameStore();
+  const { setGameState, setGameMode, user, setHighScore,highestAccuracy, highestWPM, setGamesPlayed, gamesPlayed } = useGameStore();
   const router = useRouter();
   const getWords = async () => {
     try {
@@ -125,8 +126,18 @@ const SinglePlayer = () => {
     }
   };
   
-  const endGame = () => {
+  const endGame = async () => {
     setIsActive(false);
+    if(wpm *accuracy > highestAccuracy * highestWPM || (wpm * accuracy === (highestWPM * highestAccuracy) && wpm > highestWPM)){
+      setHighScore(wpm, accuracy);
+      setIsHighScore(true);
+    }
+    setGamesPlayed(gamesPlayed + 1);
+    try {
+      await updateScore(user?.id ?? "", wpm, accuracy, gamesPlayed);
+    } catch (error) {
+      console.log('could not update score:', error);
+    }
     setShowResults(true);
   };
 
@@ -140,6 +151,7 @@ const SinglePlayer = () => {
     setTotalCharacters(0);
     setCorrectCharacters(0);
     setCorrectWords(0);
+    setIsHighScore(false);
     getWords();
     hiddenInputRef.current?.focus();
   };
@@ -276,7 +288,7 @@ const SinglePlayer = () => {
             className="flex items-center space-x-2"
           >
             <RotateCcw className="h-4 w-4" />
-            <span>Reset</span>
+            <span>Reset {user?.id}</span>
           </Button>
         </div>
 

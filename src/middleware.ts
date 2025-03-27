@@ -14,10 +14,10 @@ export async function middleware(request: NextRequest) {
     isAuthenticated = true;
     userData = user;
     //setAuthUser(user);
-    console.log('found user');
+    console.log('found user', user);
   }
   else{
-    console.log('no user found');
+    console.log('no user foundd');
   } 
   } catch (error) {
     console.log('no user found error');

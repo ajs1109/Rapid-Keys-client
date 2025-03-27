@@ -17,9 +17,9 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: [true, "Please provide an email"], unique: true },
   password: { type: String, required: [true, "Please provide a password"] },
-  highScore: { type: Number, default: 0 },
+  highestWPM: { type: Number, default: 0 },
   gamesPlayed: { type: Number, default: 0 },
-  
+  highestAccuracy: { type: Number, default: 0 }
 }, { timestamps: true });
 
 // Add pre-save middleware

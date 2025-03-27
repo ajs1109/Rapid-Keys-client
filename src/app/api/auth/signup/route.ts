@@ -1,53 +1,9 @@
 import { connect } from "@/dbConfig/dbConfig";
 import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
 import { User } from "@/types/auth";
 import { JWT_SECRET } from "@/config";
-const { TOKEN_SECRET, REFRESH_SECRET, NODE_ENV } = require('../config');
-
-// Cookie options
-const REFRESH_COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: NODE_ENV === 'production',
-  sameSite: 'strict',
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  path: '/'
-};
-
-const ACCESS_COOKIE_OPTIONS = {
-  secure: NODE_ENV === 'production',
-  sameSite: 'strict',
-  maxAge: 15 * 60 * 1000, // 15 minutes
-  path: '/'
-};
-
-const generateAccessToken = (user: User, res: NextResponse) => {
-  const accessToken = jwt.sign(
-    { user: user },
-    TOKEN_SECRET,
-    { expiresIn: '15m' }
-  );
-  res.cookies.set('access_token', accessToken);
-  return accessToken;
-}
-
-const generateRefreshToken = (user: User, res: NextResponse) => { 
-  const refreshToken = jwt.sign(
-    { user: user },
-    REFRESH_SECRET,
-    { expiresIn: '7d' }
-  );
-
-  res.cookies.set('refresh_token', refreshToken);
-  return refreshToken;
-}
-
-const clearCookies = (res: NextResponse) => {
-  res.cookies.delete('refresh_token');
-  res.cookies.delete('access_token');
-}
 
 connect();
 

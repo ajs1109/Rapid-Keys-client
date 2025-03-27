@@ -103,3 +103,12 @@ export const generateWords = async(count: number): Promise<{words: string}> => {
     throw error;
   }
 }
+
+export const updateScore = async(userId: string, wpm: number, accuracy: number, gamesPlayed: number): Promise<{message: string, success: boolean}> => {
+  try{
+    const data = await apiService.post<{message: string, success: boolean}>(`/game/update-score`, {userId, wpm, accuracy, gamesPlayed});
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
