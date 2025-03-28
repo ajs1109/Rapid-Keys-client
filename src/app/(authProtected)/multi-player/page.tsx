@@ -70,7 +70,7 @@ const MultiPlayer: React.FC = () => {
       return;
     }
 
-    const socketInstance = io(process.env.SERVER_URI || 'http://localhost:5000');
+    const socketInstance = io(process.env.SERVER_URI || 'http://localhost:3000');
     setSocket(socketInstance);
 
     socketInstance.on('connect', () => {
