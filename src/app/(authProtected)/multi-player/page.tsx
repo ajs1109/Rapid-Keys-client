@@ -113,9 +113,14 @@ const MultiPlayer: React.FC = () => {
       setOnlineFriends(prev => prev.filter(friend => friend.userId !== userId));
     });
     
-    socket.on('roomCreated', ({ roomId }) => {
+    socket.on('roomCreated', ({ roomId, newRoom }) => {
+      console.log('room created:', newRoom);
       setRoomId(roomId);
+      setPlayers(newRoom.players);
       setInRoom(true);
+      // if(friendInviteId != null && friendInviteId.length > 0){
+      //   inviteFriend();
+      // }
       toast("Room Created", {
         description: `Room ID: ${roomId}`,
       });
@@ -166,11 +171,18 @@ const MultiPlayer: React.FC = () => {
       hiddenInputRef.current?.focus();
     });
     
-    socket.on('playerProgress', ({ userId, progress, wpm, accuracy, finished, position }) => {
-      console.log(position);
+    // Update the socket.on('playerProgress') handler in your useEffect
+    socket.on('playerProgress', ({ userId, progress, wpm, accuracy, finished }) => {
       setPlayers(prev => prev.map(player => 
-        player.userId === userId ? { ...player, progress, wpm, accuracy, finished } : player
+        player.userId === userId ? { 
+          ...player, 
+          progress: progress || player.progress, 
+          wpm: wpm || player.wpm, 
+          accuracy: accuracy || player.accuracy, 
+          finished: finished || player.finished 
+        } : player
       ));
+      console.log('set players on player progress,', players, userId, wpm);
     });
     
     socket.on('playerFinished', ({ position }) => {
@@ -231,14 +243,24 @@ const MultiPlayer: React.FC = () => {
   
   // Focus the hidden input
   useEffect(() => {
-    hiddenInputRef.current?.focus();
-    
+
     const handleClick = () => {
       hiddenInputRef.current?.focus();
     };
-    document.addEventListener('click', handleClick);
+
+    if(inRoom && isActive){
+      hiddenInputRef.current?.focus();
+    
+      document.addEventListener('click', handleClick);
+    }
     return () => document.removeEventListener('click', handleClick);
   }, []);
+
+  // useEffect(() => {
+  //   if(friendInviteId != null && roomId != null && roomId.length > 0 && friendInviteId.length > 0)
+  //     inviteFriend();
+  // }, [friendInviteId])
+  
   
 // Game timer
 useEffect(() => {
@@ -260,59 +282,55 @@ useEffect(() => {
   };
 }, [isActive, timeLeft]);
   
-  // Calculate WPM and accuracy
-  useEffect(() => {
-    if (isActive && userInput.length > 0 && gameText) {
-      const minutes = (GAME_TIME - timeLeft) / 60;
-      
-      let correctChars = 0;
-      for (let i = 0; i < userInput.length; i++) {
-        if (userInput[i] === gameText[i]) correctChars++;
-      }
-      
-      let correctWordsCount = 0;
-      let wordFlag = true;
-      
-      for (let i = 0; i < userInput.length; i++) {
-        if (userInput[i] !== gameText[i]) {
-          wordFlag = false;
-        }
-        
-        if (i < gameText.length && userInput[i] === gameText[i] && userInput[i] === ' ' && wordFlag) {
-          correctWordsCount++;
-          wordFlag = true;
-        }
-      }
-      
-      setCorrectWords(correctWordsCount);
-      setCorrectCharacters(correctChars);
-      setTotalCharacters(userInput.length);
-      
-      const currentAccuracy = Math.round((correctChars / userInput.length) * 100);
-      const currentWpm = Math.round(correctWordsCount / Math.max(minutes, 1/60));
-      
-      setWpm(currentWpm);
-      setAccuracy(currentAccuracy);
-      
-      // Calculate progress percentage
-      const progress = Math.min(100, Math.round((userInput.length / gameText.length) * 100));
-      
-      // Send progress update to server
-      if (socket && roomId) {
-        socket.emit('progressUpdate', { 
-          roomId, 
-          progress, 
-          wpm: currentWpm, 
-          accuracy: currentAccuracy 
-        });
-      }
-      
-      // Check if typing test is complete
-      if (userInput.length >= gameText.length) {
-        endGame();
-      }
+// Calculate WPM and accuracy
+useEffect(() => {
+  if (isActive && userInput.length > 0 && gameText) {
+    const minutes = (GAME_TIME - timeLeft) / 60;
+    
+    let correctChars = 0;
+    for (let i = 0; i < userInput.length; i++) {
+      if (userInput[i] === gameText[i]) correctChars++;
     }
-  }, [userInput, isActive, gameText]);
+    
+    // New WPM calculation - count 5 characters as one word
+    const wordsTyped = correctChars / 5;
+    const currentWpm = Math.round(wordsTyped / Math.max(minutes, 1/60));
+    
+    setCorrectCharacters(correctChars);
+    setTotalCharacters(userInput.length);
+    
+    const currentAccuracy = Math.round((correctChars / userInput.length) * 100);
+    
+    setWpm(currentWpm);
+    setAccuracy(currentAccuracy);
+    
+    // Calculate progress percentage
+    // Update the progress calculation in the input tracking useEffect
+    const progress = Math.min(100, Math.round((userInput.length / gameText.length) * 100));
+    
+    // Send progress update to server
+    if (socket && roomId) {
+      console.log('Emitting progress update', { 
+        roomId, 
+        progress, 
+        wpm: currentWpm, 
+        accuracy: currentAccuracy 
+      });
+      socket.emit('progressUpdate', { 
+        roomId, 
+        progress, 
+        wpm: currentWpm, 
+        accuracy: currentAccuracy,
+        finished: userInput.length >= gameText.length
+      });
+    }
+    
+    // Check if typing test is complete
+    if (userInput.length >= gameText.length) {
+      endGame();
+    }
+  }
+}, [userInput, isActive, gameText]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (isActive && timeLeft > 0) {
@@ -348,7 +366,7 @@ useEffect(() => {
     router.push('/menu');
   };
   
-  const createRoom = (isPrivate = false) => {
+  const createRoom = async (isPrivate = false) => {
     if (!socket) return;
     socket.emit('createRoom', { isPrivate });
   };
@@ -366,6 +384,7 @@ useEffect(() => {
     setRoomId('');
     setInRoom(false);
     setPlayers([]);
+    setFriendInviteId('');
     resetGame();
   };
   
@@ -384,7 +403,7 @@ useEffect(() => {
   };
   
   const inviteFriend = () => {
-    if (!socket || !roomId || !friendInviteId) return;
+    if (!socket || !roomId || !friendInviteId){console.log('could not invite friend'); return;}
     socket.emit('inviteFriend', { friendId: friendInviteId, roomId });
     toast("Invitation Sent",{
       description: "Your friend has been invited to the game",
@@ -443,7 +462,7 @@ useEffect(() => {
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {availableRooms.map(room => (
                     <div key={room.roomId} className="flex justify-between items-center">
-                      <span>Room {room.roomId.substring(0, 8)}... ({room.playerCount} players)</span>
+                      <span>Room {room.roomId.substring(0, 8)} ({room.playerCount} players)</span>
                       <Button 
                         size="sm"
                         onClick={() => joinRoom(room.roomId)}
@@ -490,8 +509,8 @@ useEffect(() => {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        createRoom(true);
                         setFriendInviteId(friend.userId);
+                        createRoom(true);
                         // We'll send the invite after the room is created
                         setTimeout(() => inviteFriend(), 500);
                       }}
@@ -511,7 +530,7 @@ useEffect(() => {
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <span className='flex'>
-              <h3 className="text-xl font-semibold">Room: {roomId.substring(0, 20)}...  </h3><button title='Copy Room Id' onClick={copyRoomId}><Copy className="h-4 w-4 mx-4"/></button></span>
+              <h3 className="text-xl font-semibold">Room: {roomId.substring(0, 20)} </h3><button title='Copy Room Id' onClick={copyRoomId}><Copy className="h-4 w-4 mx-4"/></button></span>
               <Button 
                 variant="outline"
                 size="sm"
@@ -629,14 +648,20 @@ useEffect(() => {
           {players.map(player => (
             <div key={player.userId} className="space-y-1">
               <div className="flex justify-between items-center">
-                <span className="font-medium">{player.username}</span>
+                <span className="font-medium">
+                  {player.username} 
+                  {user?.id === player.userId && " (You)"}
+                  {player.finished && " 🏁"}
+                </span>
                 <span className="text-sm text-gray-500">
                   {player.wpm || 0} WPM | {player.accuracy || 0}% Accuracy
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div 
-                  className="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out" 
+                  className={`h-2.5 rounded-full transition-all duration-300 ease-out ${
+                    player.finished ? 'bg-green-500' : 'bg-indigo-600'
+                  }`} 
                   style={{ width: `${player.progress || 0}%` }}
                 ></div>
               </div>

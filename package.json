@@ -6,8 +6,11 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "dev:socket": "node --loader ts-node/esm server.ts",
-    "socketdev": "tsnd --respawn --pretty --transpile-only server.ts",
+    "socketdev": "tsnd --respawn --pretty --transpile-only --ignore-watch=\".next\" server.ts",
+    "dev:server": "ts-node server.ts",
     "newsoc": "tsx server.ts",
+    "plswork:server": "nodemon --watch 'server/**/*.ts' --exec tsx server.ts",
+    "plswork": "next plswork & npm run plswork:server",
     "build": "next build",
     "start": "next start",
     "socketstart": "NODE_ENV=production node server.ts",
@@ -48,6 +51,7 @@
     "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.19.3",
     "utf-8-validate": "^6.0.5",
+    "uuid": "^11.1.0",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
