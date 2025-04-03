@@ -1,9 +1,11 @@
+// server.ts
 import { createServer } from "node:http";
 import next from "next";
 import { Server } from "socket.io";
+import GameServer from "@/socket/game.js";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = process.env.HOST_NAME as string || "localhost";
+const hostname = process.env.HOST_NAME || "localhost";
 const port = parseInt(process.env.PORT || "3000", 10);
 
 async function startServer() {
@@ -15,10 +17,16 @@ async function startServer() {
 
     const httpServer = createServer(handler);
     
-    const io = new Server(httpServer);
-    io.on("connection", (socket) => {
-        console.log(`User connected:`, socket.id);
+    const io = new Server(httpServer, {
+        cors: {
+            origin: "*",
+            methods: ["GET", "POST"]
+        }
     });
+
+    // Initialize game server
+    const gameServer = new GameServer(io);
+    gameServer.initialize();
 
     httpServer
     .once("error", (err) => {

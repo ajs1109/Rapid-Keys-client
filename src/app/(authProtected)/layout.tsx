@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { verifyUser } from '@/lib/api';
 import { redirect } from 'next/navigation';
 import { User } from '@/types/auth';
+import InitializeAuth from './InitializeAuth';
 //import useStore from '@/store/useGameStore';
 
 // const geistSans = Geist({
@@ -52,6 +53,7 @@ export default async function RootLayout({
         <meta name="user-data" content="" />
       </head>
       <body className="antialiased">
+        <InitializeAuth user={user}/>
         <AuthLayout children={children} user={user}/>
       </body>
     </html>
