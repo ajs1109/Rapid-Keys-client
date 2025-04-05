@@ -62,22 +62,21 @@ const MultiPlayer: React.FC = () => {
 
   // Initialize socket connection
   useEffect(() => {
-    console.log('user from game store in multi-player:', user);
-    console.log('total characters:', totalCharacters, correctCharacters, correctWords);
     if (!user || !user.id) {
       toast.error('Please log in to play multiplayer mode');
-      //router.push('/login');
       return;
     }
 
-    const socketInstance = io(process.env.SERVER_URI || 'http://localhost:3000');
+    const socketInstance = io(process.env.SERVER_URI || 'http://localhost:3000', {
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+
     setSocket(socketInstance);
 
     socketInstance.on('connect', () => {
       setIsConnected(true);
-      console.log('Connected to server');
-
-      // Authenticate with socket
       socketInstance.emit('authenticate', {
         userId: user.id,
         username: user.username,
@@ -86,10 +85,19 @@ const MultiPlayer: React.FC = () => {
 
     socketInstance.on('disconnect', () => {
       setIsConnected(false);
-      console.log('Disconnected from server');
     });
 
-    // Cleanup function
+    socketInstance.on('reconnect', () => {
+      setIsConnected(true);
+      socketInstance.emit('authenticate', {
+        userId: user.id,
+        username: user.username,
+      });
+      if (roomId) {
+        socketInstance.emit('rejoinRoom', { roomId });
+      }
+    });
+
     return () => {
       if (roomId) {
         socketInstance.emit('leaveRoom', { roomId });
@@ -101,236 +109,180 @@ const MultiPlayer: React.FC = () => {
   useEffect(() => {
     if (!socket) return;
     
-    socket.on('onlineFriends', (friends) => {
-      setOnlineFriends(friends);
+    const socketListeners = {
+      'onlineFriends': (friends: Friend[]) => setOnlineFriends(friends),
+      'userOnline': (user: Friend) => setOnlineFriends(prev => [...prev, user]),
+      'userOffline': ({ userId }: { userId: string }) => 
+        setOnlineFriends(prev => prev.filter(friend => friend.userId !== userId)),
+      'roomCreated': ({ roomId, newRoom }: { roomId: string, newRoom: any }) => {
+        setRoomId(roomId);
+        setPlayers(newRoom.players);
+        setInRoom(true);
+        toast("Room Created", { description: `Room ID: ${roomId}` });
+      },
+      'roomAvailable': (room: Room) => {
+        setAvailableRooms(prev => 
+          !prev.some(r => r.roomId === room.roomId) ? [...prev, room] : prev
+        );
+      },
+      'roomClosed': ({ roomId }: { roomId: string }) => {
+        setAvailableRooms(prev => prev.filter(room => room.roomId !== roomId));
+      },
+      'playerJoined': ({ players }: { players: Player[] }) => {
+        setPlayers(players);
+        toast("Player Joined", {
+          description: `${players[players.length - 1].username} joined the room`,
+        });
+      },
+      'playerLeft': ({ userId }: { userId: string }) => {
+        setPlayers(prev => prev.filter(player => player.userId !== userId));
+        toast("Player Left", { description: "A player has left the room" });
+      },
+      'playerReadyState': ({ userId, isReady }: { userId: string, isReady: boolean }) => {
+        setPlayers(prev => prev.map(player => 
+          player.userId === userId ? { ...player, isReady } : player
+        ));
+      },
+      'gameCountdown': ({ countdown }: { countdown: number }) => setCountdown(countdown),
+      'gameStart': ({ text, gameTime }: { text: string, gameTime: number }) => {
+        setGameText(text);
+        setTimeLeft(gameTime);
+        setCountdown(null);
+        setIsActive(true);
+        setTimeout(() => hiddenInputRef.current?.focus(), 100);
+      },
+      'playerProgress': ({ userId, progress, wpm, accuracy, finished }: 
+        { userId: string, progress: number, wpm: number, accuracy: number, finished: boolean }) => {
+        setPlayers(prev => prev.map(player => 
+          player.userId === userId ? { 
+            ...player, 
+            progress, 
+            wpm, 
+            accuracy, 
+            finished 
+          } : player
+        ));
+      },
+      'playerFinished': ({ position }: { position: number }) => {
+        setUserFinishPosition(position);
+      },
+      'gameResults': ({ results }: { results: Player[] }) => {
+        setResults(results);
+        setIsActive(false);
+        setGameEnded(true);
+        setShowResults(true);
+      },
+      'roomReset': () => resetGame(),
+      'battleInvitation': ({ roomId, from }: { roomId: string, from: Friend }) => {
+        toast("Battle Invitation", {
+          description: `${from.username} invited you to a typing battle!`,
+          action: (
+            <Button onClick={() => { joinRoom(roomId); toast.dismiss(); }}>Join</Button>
+          ),
+          cancel: (
+            <Button variant="outline" onClick={() => toast.dismiss()}>Ignore</Button>
+          ),
+          icon: <Swords/>,
+        });
+      },
+      'error': ({ message }: { message: string }) => {
+        toast.error("Error", { description: message });
+      },
+    };
+
+    Object.entries(socketListeners).forEach(([event, handler]) => {
+      socket.on(event, handler);
     });
-    
-    socket.on('userOnline', (user) => {
-      setOnlineFriends(prev => [...prev, user]);
-    });
-    
-    socket.on('userOffline', ({ userId }) => {
-      setOnlineFriends(prev => prev.filter(friend => friend.userId !== userId));
-    });
-    
-    socket.on('roomCreated', ({ roomId, newRoom }) => {
-      console.log('room created:', newRoom);
-      setRoomId(roomId);
-      setPlayers(newRoom.players);
-      setInRoom(true);
-      // if(friendInviteId != null && friendInviteId.length > 0){
-      //   inviteFriend();
-      // }
-      toast("Room Created", {
-        description: `Room ID: ${roomId}`,
-      });
-    });
-    
-    socket.on('roomAvailable', (room) => {
-      setAvailableRooms(prev => {
-        if (!prev.some(r => r.roomId === room.roomId)) {
-          return [...prev, room];
-        }
-        return prev;
-      });
-    });
-    
-    socket.on('roomClosed', ({ roomId }) => {
-      setAvailableRooms(prev => prev.filter(room => room.roomId !== roomId));
-    });
-    
-    socket.on('playerJoined', ({ players }) => {
-      setPlayers(players);
-      toast("Player Joined", {
-        description: `${players[players.length - 1].username} joined the room`,
-      });
-    });
-    
-    socket.on('playerLeft', ({ userId }) => {
-      setPlayers(prev => prev.filter(player => player.userId !== userId));
-      toast("Player Left", {
-        description: "A player has left the room",
-      });
-    });
-    
-    socket.on('playerReadyState', ({ userId, isReady }) => {
-      setPlayers(prev => prev.map(player => 
-        player.userId === userId ? { ...player, isReady } : player
-      ));
-    });
-    
-    socket.on('gameCountdown', ({ countdown }) => {
-      setCountdown(countdown);
-    });
-    
-    socket.on('gameStart', ({ text, gameTime }) => {
-      setGameText(text);
-      setTimeLeft(gameTime);
-      setCountdown(null);
-      setIsActive(true);
-      hiddenInputRef.current?.focus();
-    });
-    
-    // Update the socket.on('playerProgress') handler in your useEffect
-    socket.on('playerProgress', ({ userId, progress, wpm, accuracy, finished }) => {
-      setPlayers(prev => prev.map(player => 
-        player.userId === userId ? { 
-          ...player, 
-          progress: progress || player.progress, 
-          wpm: wpm || player.wpm, 
-          accuracy: accuracy || player.accuracy, 
-          finished: finished || player.finished 
-        } : player
-      ));
-      console.log('set players on player progress,', players, userId, wpm);
-    });
-    
-    socket.on('playerFinished', ({ position }) => {
-      setUserFinishPosition(position);
-    });
-    
-    socket.on('gameResults', ({ results }) => {
-      setResults(results);
-      setIsActive(false);
-      setGameEnded(true);
-      setShowResults(true);
-    });
-    
-    socket.on('roomReset', () => {
-      resetGame();
-    });
-    
-    socket.on('battleInvitation', ({ roomId, from }) => {
-      toast.loading("Battle Invitation",{
-        description: `${from.username} invited you to a typing battle!`,
-        action: (
-          <Button onClick={() => {joinRoom(roomId); toast.dismiss(`invite-${roomId}`)}}>Join</Button>
-        ),
-        cancel: (
-          <Button onClick={() => toast.dismiss(`invite-${roomId}`)}>Ignore</Button>
-        ),
-        icon: <Swords/>,
-        id: `invite-${roomId}`
-      });
-    });
-    
-    socket.on('error', ({ message }) => {
-      toast.error("Error",{
-        description: message
-      });
-    });
-    
+
     return () => {
-      socket.off('onlineFriends');
-      socket.off('userOnline');
-      socket.off('userOffline');
-      socket.off('roomCreated');
-      socket.off('roomAvailable');
-      socket.off('roomClosed');
-      socket.off('playerJoined');
-      socket.off('playerLeft');
-      socket.off('playerReadyState');
-      socket.off('gameCountdown');
-      socket.off('gameStart');
-      socket.off('playerProgress');
-      socket.off('playerFinished');
-      socket.off('gameResults');
-      socket.off('roomReset');
-      socket.off('battleInvitation');
-      socket.off('error');
+      Object.entries(socketListeners).forEach(([event, handler]) => {
+        socket.off(event, handler as any);
+      });
     };
   }, [socket]);
   
-  // Focus the hidden input
+  // Game timer
   useEffect(() => {
-
-    const handleClick = () => {
-      hiddenInputRef.current?.focus();
+    let intervalId: NodeJS.Timeout | undefined;
+    if (isActive && timeLeft > 0) {
+      intervalId = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearInterval(intervalId);
+            endGame();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
     };
-
-    if(inRoom && isActive){
-      hiddenInputRef.current?.focus();
-    
-      document.addEventListener('click', handleClick);
-    }
-    return () => document.removeEventListener('click', handleClick);
-  }, []);
-
-  // useEffect(() => {
-  //   if(friendInviteId != null && roomId != null && roomId.length > 0 && friendInviteId.length > 0)
-  //     inviteFriend();
-  // }, [friendInviteId])
+  }, [isActive, timeLeft]);
   
-  
-// Game timer
-useEffect(() => {
-  let intervalId: NodeJS.Timeout | undefined;
-  if (isActive && timeLeft > 0) {
-    intervalId = setInterval(() => {
-      setTimeLeft((time: number) => {
-        if (time <= 1) {
-          clearInterval(intervalId);
-          endGame();
-          return 0;
+  // Calculate WPM and accuracy
+  useEffect(() => {
+    if (isActive && userInput.length > 0 && gameText) {
+      const minutes = (GAME_TIME - timeLeft) / 60;
+      
+      let correctChars = 0;
+      let correctWordsCount = 0;
+      let currentWord = '';
+      let expectedWord = '';
+      
+      for (let i = 0; i < userInput.length; i++) {
+        if (userInput[i] === gameText[i]) {
+          correctChars++;
+          
+          // Word tracking
+          currentWord += userInput[i];
+          expectedWord += gameText[i];
+          
+          // Check for complete word
+          if (userInput[i] === ' ' || i === userInput.length - 1) {
+            if (currentWord.trim() === expectedWord.trim()) {
+              correctWordsCount++;
+            }
+            currentWord = '';
+            expectedWord = '';
+          }
+        } else {
+          currentWord = '';
+          expectedWord = '';
         }
-        return time - 1;
-      });
-    }, 1000);
-  }
-  return () => {
-    if (intervalId) clearInterval(intervalId);
-  };
-}, [isActive, timeLeft]);
-  
-// Calculate WPM and accuracy
-useEffect(() => {
-  if (isActive && userInput.length > 0 && gameText) {
-    const minutes = (GAME_TIME - timeLeft) / 60;
-    
-    let correctChars = 0;
-    for (let i = 0; i < userInput.length; i++) {
-      if (userInput[i] === gameText[i]) correctChars++;
+      }
+
+      setCorrectWords(correctWordsCount);
+      setCorrectCharacters(correctChars);
+      setTotalCharacters(userInput.length);
+      
+      const currentAccuracy = userInput.length > 0 
+        ? Math.round((correctChars / userInput.length) * 100) 
+        : 100;
+      
+      const currentWpm = Math.round(correctWordsCount / Math.max(minutes, 1/60));
+      
+      setWpm(currentWpm);
+      setAccuracy(currentAccuracy);
+      
+      const progress = Math.min(100, Math.round((userInput.length / gameText.length) * 100));
+      
+      if (socket && roomId) {
+        socket.emit('progressUpdate', { 
+          roomId, 
+          progress, 
+          wpm: currentWpm, 
+          accuracy: currentAccuracy,
+          finished: userInput.length >= gameText.length
+        });
+      }
+      
+      if (userInput.length >= gameText.length) {
+        endGame();
+      }
     }
-    
-    // New WPM calculation - count 5 characters as one word
-    const wordsTyped = correctChars / 5;
-    const currentWpm = Math.round(wordsTyped / Math.max(minutes, 1/60));
-    
-    setCorrectCharacters(correctChars);
-    setTotalCharacters(userInput.length);
-    
-    const currentAccuracy = Math.round((correctChars / userInput.length) * 100);
-    
-    setWpm(currentWpm);
-    setAccuracy(currentAccuracy);
-    
-    // Calculate progress percentage
-    // Update the progress calculation in the input tracking useEffect
-    const progress = Math.min(100, Math.round((userInput.length / gameText.length) * 100));
-    
-    // Send progress update to server
-    if (socket && roomId) {
-      console.log('Emitting progress update', { 
-        roomId, 
-        progress, 
-        wpm: currentWpm, 
-        accuracy: currentAccuracy 
-      });
-      socket.emit('progressUpdate', { 
-        roomId, 
-        progress, 
-        wpm: currentWpm, 
-        accuracy: currentAccuracy,
-        finished: userInput.length >= gameText.length
-      });
-    }
-    
-    // Check if typing test is complete
-    if (userInput.length >= gameText.length) {
-      endGame();
-    }
-  }
-}, [userInput, isActive, gameText]);
+  }, [userInput, isActive, gameText]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     if (isActive && timeLeft > 0) {
@@ -351,10 +303,10 @@ useEffect(() => {
     setShowResults(false);
     setTotalCharacters(0);
     setCorrectCharacters(0);
+    setCorrectWords(0);
     setIsReady(false);
     setUserFinishPosition(null);
     setGameEnded(false);
-    hiddenInputRef.current?.focus();
   };
   
   const homeButton = () => {
@@ -366,7 +318,7 @@ useEffect(() => {
     router.push('/menu');
   };
   
-  const createRoom = async (isPrivate = false) => {
+  const createRoom = (isPrivate = false) => {
     if (!socket) return;
     socket.emit('createRoom', { isPrivate });
   };
@@ -390,10 +342,8 @@ useEffect(() => {
   
   const copyRoomId = () => {
     navigator.clipboard.writeText(roomId);
-    toast.success("Copied!", {
-      description: "Room ID copied to clipboard"
-    });
-  }
+    toast.success("Copied!", { description: "Room ID copied to clipboard" });
+  };
 
   const toggleReady = () => {
     if (!socket || !roomId) return;
@@ -403,11 +353,24 @@ useEffect(() => {
   };
   
   const inviteFriend = () => {
-    if (!socket || !roomId || !friendInviteId){console.log('could not invite friend'); return;}
-    socket.emit('inviteFriend', { friendId: friendInviteId, roomId });
-    toast("Invitation Sent",{
-      description: "Your friend has been invited to the game",
+    if (!socket || !roomId || !friendInviteId) return;
+    
+    // Check if friend is already in the room
+    if (players.some(p => p.userId === friendInviteId)) {
+      toast.error("Friend is already in the room");
+      return;
+    }
+
+    socket.emit('inviteFriend', { 
+      friendId: friendInviteId, 
+      roomId,
+      from: {
+        userId: user?.id,
+        username: user?.username
+      }
     });
+    
+    toast("Invitation Sent", { description: "Your friend has been invited to the game" });
   };
   
   const renderText = () => {
@@ -440,17 +403,10 @@ useEffect(() => {
             <Card className="p-6">
               <h3 className="text-xl font-semibold mb-4">Create a Room</h3>
               <div className="space-y-4">
-                <Button 
-                  className="w-full"
-                  onClick={() => createRoom(false)}
-                >
+                <Button className="w-full" onClick={() => createRoom(false)}>
                   Create Public Room
                 </Button>
-                <Button 
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => createRoom(true)}
-                >
+                <Button className="w-full" variant="outline" onClick={() => createRoom(true)}>
                   Create Private Room
                 </Button>
               </div>
@@ -463,10 +419,7 @@ useEffect(() => {
                   {availableRooms.map(room => (
                     <div key={room.roomId} className="flex justify-between items-center">
                       <span>Room {room.roomId.substring(0, 8)} ({room.playerCount} players)</span>
-                      <Button 
-                        size="sm"
-                        onClick={() => joinRoom(room.roomId)}
-                      >
+                      <Button size="sm" onClick={() => joinRoom(room.roomId)}>
                         Join
                       </Button>
                     </div>
@@ -487,11 +440,9 @@ useEffect(() => {
                 className="flex-1 p-2 border rounded"
                 value={roomId}
                 onChange={e => setRoomId(e.target.value)}
+                onFocus={e => e.target.select()}
               />
-              <Button 
-                onClick={() => joinRoom(roomId)}
-                disabled={!roomId}
-              >
+              <Button onClick={() => joinRoom(roomId)} disabled={!roomId}>
                 <LogIn className="h-4 w-4 mr-2" />
                 Join
               </Button>
@@ -511,7 +462,6 @@ useEffect(() => {
                       onClick={() => {
                         setFriendInviteId(friend.userId);
                         createRoom(true);
-                        // We'll send the invite after the room is created
                         setTimeout(() => inviteFriend(), 500);
                       }}
                     >
@@ -530,13 +480,12 @@ useEffect(() => {
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <span className='flex'>
-              <h3 className="text-xl font-semibold">Room: {roomId.substring(0, 20)} </h3><button title='Copy Room Id' onClick={copyRoomId}><Copy className="h-4 w-4 mx-4"/></button></span>
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={leaveRoom}
-                title='Leave Room'
-              >
+                <h3 className="text-xl font-semibold">Room: {roomId.substring(0, 20)} </h3>
+                <button title='Copy Room Id' onClick={copyRoomId}>
+                  <Copy className="h-4 w-4 mx-4"/>
+                </button>
+              </span>
+              <Button variant="outline" size="sm" onClick={leaveRoom} title='Leave Room'>
                 Leave Room
               </Button>
             </div>
@@ -609,7 +558,7 @@ useEffect(() => {
   );
   
   const GameView = () => (
-    <div className="space-y-8">
+    <div className="space-y-8" onClick={() => hiddenInputRef.current?.focus()}>
       <div className="grid grid-cols-3 gap-4">
         <Card className="p-6 flex items-center space-x-4">
           <Timer className="h-6 w-6 text-indigo-500" />
@@ -662,7 +611,10 @@ useEffect(() => {
                   className={`h-2.5 rounded-full transition-all duration-300 ease-out ${
                     player.finished ? 'bg-green-500' : 'bg-indigo-600'
                   }`} 
-                  style={{ width: `${player.progress || 0}%` }}
+                  style={{ 
+                    width: `${player.progress || 0}%`,
+                    transition: 'width 0.3s ease-out'
+                  }}
                 ></div>
               </div>
             </div>
@@ -676,7 +628,7 @@ useEffect(() => {
         value={userInput}
         onChange={handleInputChange}
         className="opacity-0 absolute top-0 left-0 h-0 w-0"
-        autoFocus
+        autoFocus={isActive}
       />
     </div>
   );

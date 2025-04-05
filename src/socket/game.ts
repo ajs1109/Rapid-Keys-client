@@ -1,26 +1,33 @@
-// server/socket/game.ts
 import { Server, Socket } from "socket.io";
-import { Room, Player, GameResult, GameText } from '@/types/multiplayer';
 import { generateTypingText } from "@/utils/serverUtils";
 
-// Sample game texts
-const GAME_TEXTS: GameText[] = [
-  {
-    id: '1',
-    text: 'The quick brown fox jumps over the lazy dog. This sentence contains all the letters in the English alphabet. Typing is a skill that improves with practice, so keep practicing every day to become faster and more accurate.',
-    difficulty: 'easy'
-  },
-  {
-    id: '2',
-    text: 'Programming is the process of creating a set of instructions that tell a computer how to perform a task. JavaScript, often abbreviated as JS, is a programming language that conforms to the ECMAScript specification. TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.',
-    difficulty: 'medium'
-  },
-  {
-    id: '3',
-    text: 'The theory of relativity usually encompasses two interrelated theories by Albert Einstein: special relativity and general relativity. Special relativity applies to all physical phenomena in the absence of gravity. General relativity explains the law of gravitation and its relation to other forces of nature.',
-    difficulty: 'hard'
-  }
-];
+interface Player {
+  id: string;
+  username: string;
+  socketId: string;
+  isReady: boolean;
+  progress: number;
+  wpm: number;
+  accuracy: number;
+  finished: boolean;
+  position?: number;
+}
+
+interface Room {
+  id: string;
+  players: Player[];
+  isPrivate: boolean;
+  isGameInProgress: boolean;
+  gameText?: string;
+  countdown?: number;
+  results: Player[];
+}
+
+interface ConnectedUser {
+  userId: string;
+  username: string;
+  socketId: string;
+}
 
 const GAME_TIME = 60; // 60 seconds
 const COUNTDOWN_TIME = 5; // 5 seconds countdown before game starts
@@ -28,7 +35,7 @@ const COUNTDOWN_TIME = 5; // 5 seconds countdown before game starts
 export default class GameServer {
   private io: Server;
   private rooms: Map<string, Room> = new Map();
-  private connectedUsers: Map<string, { userId: string, username: string, socketId: string }> = new Map();
+  private connectedUsers: Map<string, ConnectedUser> = new Map();
   private friendsList: Map<string, string[]> = new Map();
 
   constructor(io: Server) {
@@ -53,6 +60,10 @@ export default class GameServer {
         this.handleJoinRoom(socket, data.roomId);
       });
 
+      socket.on('rejoinRoom', (data: { roomId: string }) => {
+        this.handleRejoinRoom(socket, data.roomId);
+      });
+
       socket.on('leaveRoom', (data: { roomId: string }) => {
         this.handleLeaveRoom(socket, data.roomId);
       });
@@ -66,14 +77,26 @@ export default class GameServer {
         roomId: string, 
         progress: number, 
         wpm: number, 
-        accuracy: number 
+        accuracy: number,
+        finished: boolean
       }) => {
-        this.handleProgressUpdate(socket, data.roomId, data.progress, data.wpm, data.accuracy);
+        this.handleProgressUpdate(
+          socket, 
+          data.roomId, 
+          data.progress, 
+          data.wpm, 
+          data.accuracy,
+          data.finished
+        );
       });
 
       // Friend and invitation events
-      socket.on('inviteFriend', (data: { friendId: string, roomId: string }) => {
-        this.handleInviteFriend(socket, data.friendId, data.roomId);
+      socket.on('inviteFriend', (data: { 
+        friendId: string, 
+        roomId: string,
+        from: { userId: string, username: string }
+      }) => {
+        this.handleInviteFriend(socket, data.friendId, data.roomId, data.from);
       });
 
       // Disconnection handler
@@ -94,7 +117,15 @@ export default class GameServer {
     const friends = this.friendsList.get(userId) || [];
     return [...this.connectedUsers.values()]
       .filter(user => friends.includes(user.userId))
-      .filter(user => user.userId !== userId); // Still exclude self
+      .filter(user => user.userId !== userId);
+  }
+
+  private updateOnlineFriends(socket: Socket) {
+    const currentUser = this.connectedUsers.get(socket.id);
+    if (!currentUser) return;
+  
+    const onlineFriends = this.getOnlineFriendsForUser(currentUser.userId);
+    socket.emit('onlineFriends', onlineFriends);
   }
 
   private handleAuthentication(socket: Socket, data: { userId: string, username: string }) {
@@ -104,16 +135,12 @@ export default class GameServer {
       socketId: socket.id
     });
   
-    // Update friends list for this user only
     this.updateOnlineFriends(socket);
   
-    // Notify others about this new user (excluding self)
     socket.broadcast.emit('userOnline', {
       userId: data.userId,
       username: data.username
     });
-  
-    console.log(`User authenticated: ${data.username} (${data.userId})`);
   }
 
   private handleCreateRoom(socket: Socket, isPrivate: boolean) {
@@ -123,7 +150,7 @@ export default class GameServer {
       return;
     }
 
-    const roomId = (Number(Math.floor(Math.random() * 900000) + 100000)).toString();
+    const roomId = Math.floor(Math.random() * 900000 + 100000).toString();
     const newRoom: Room = {
       id: roomId,
       players: [{
@@ -143,19 +170,15 @@ export default class GameServer {
 
     this.rooms.set(roomId, newRoom);
     socket.join(roomId);
-    console.log('new room:', newRoom);
-    // Notify the creator
+    
     socket.emit('roomCreated', { roomId, newRoom });
 
-    // For public rooms, notify others
     if (!isPrivate) {
       this.io.emit('roomAvailable', { 
         roomId, 
         playerCount: 1 
       });
     }
-
-    console.log(`Room created: ${roomId} by ${user.username}`);
   }
 
   private handleJoinRoom(socket: Socket, roomId: string) {
@@ -181,7 +204,6 @@ export default class GameServer {
       return;
     }
 
-    // Add player to room
     room.players.push({
       id: user.userId,
       username: user.username,
@@ -195,20 +217,40 @@ export default class GameServer {
 
     socket.join(roomId);
 
-    // Notify all players in the room
-    this.io.to(roomId).emit('playerJoined', { 
-      players: room.players 
-    });
+    this.io.to(roomId).emit('playerJoined', { players: room.players });
 
-    // For public rooms, update room count
     if (!room.isPrivate) {
       this.io.emit('roomAvailable', { 
         roomId, 
         playerCount: room.players.length 
       });
     }
+  }
 
-    console.log(`${user.username} joined room ${roomId}`);
+  private handleRejoinRoom(socket: Socket, roomId: string) {
+    const user = this.connectedUsers.get(socket.id);
+    if (!user) return;
+
+    const room = this.rooms.get(roomId);
+    if (!room) return;
+
+    const player = room.players.find(p => p.id === user.userId);
+    if (!player) return;
+
+    // Update socket ID for the player
+    player.socketId = socket.id;
+    socket.join(roomId);
+
+    // Send current room state to the reconnecting player
+    socket.emit('roomCreated', { roomId, newRoom: room });
+    
+    if (room.isGameInProgress) {
+      // If game is in progress, send the current game state
+      socket.emit('gameStart', { 
+        text: room.gameText, 
+        gameTime: GAME_TIME 
+      });
+    }
   }
 
   private handleLeaveRoom(socket: Socket, roomId: string) {
@@ -218,17 +260,42 @@ export default class GameServer {
     const room = this.rooms.get(roomId);
     if (!room) return;
 
-    // Remove player from room
-    room.players = room.players.filter(p => p.id !== user.userId);
-    socket.leave(roomId);
+    const playerIndex = room.players.findIndex(p => p.id === user.userId);
+    if (playerIndex === -1) return;
 
-    // Notify remaining players
-    if (room.players.length > 0) {
-      this.io.to(roomId).emit('playerLeft', { 
-        userId: user.userId 
+    const wasGameInProgress = room.isGameInProgress;
+    const player = room.players[playerIndex];
+
+    // If game was in progress, mark player as finished
+    if (wasGameInProgress && !player.finished) {
+      player.finished = true;
+      player.position = room.results.length + 1;
+      room.results.push({
+        ...player,
+        position: player.position
       });
 
-      // For public rooms, update room count
+      this.io.to(roomId).emit('playerProgress', {
+        userId: user.userId,
+        progress: player.progress,
+        wpm: player.wpm,
+        accuracy: player.accuracy,
+        finished: true
+      });
+
+      // Check if all players finished
+      if (room.players.every(p => p.finished)) {
+        this.endGame(room);
+      }
+    }
+
+    // Remove player from room
+    room.players.splice(playerIndex, 1);
+    socket.leave(roomId);
+
+    if (room.players.length > 0) {
+      this.io.to(roomId).emit('playerLeft', { userId: user.userId });
+
       if (!room.isPrivate) {
         this.io.emit('roomAvailable', { 
           roomId, 
@@ -236,8 +303,8 @@ export default class GameServer {
         });
       }
 
-      // If game was in progress, end it if only one player left
-      if (room.isGameInProgress && room.players.length === 1) {
+      // If only one player left and game was in progress, end the game
+      if (wasGameInProgress && room.players.length === 1) {
         this.endGame(room);
       }
     } else {
@@ -247,8 +314,6 @@ export default class GameServer {
         this.io.emit('roomClosed', { roomId });
       }
     }
-
-    console.log(`${user.username} left room ${roomId}`);
   }
 
   private handlePlayerReady(socket: Socket, roomId: string, ready: boolean) {
@@ -258,31 +323,26 @@ export default class GameServer {
     const room = this.rooms.get(roomId);
     if (!room) return;
 
-    // Update player ready status
     const player = room.players.find(p => p.id === user.userId);
-    if (player) {
-      player.isReady = ready;
-    }
+    if (!player) return;
 
-    // Notify all players in the room
+    player.isReady = ready;
+
     this.io.to(roomId).emit('playerReadyState', { 
       userId: user.userId, 
       isReady: ready 
     });
 
-    // Check if all players are ready to start the game
-    if (ready && room.players.length >= 2 && room.players.every(p => p.isReady) && !room.isGameInProgress) {
+    if (ready && room.players.length >= 2 && 
+        room.players.every(p => p.isReady) && !room.isGameInProgress) {
       this.startGame(room);
     }
-
-    console.log(`${user.username} is ${ready ? 'ready' : 'not ready'} in room ${roomId}`);
   }
 
   private startGame(room: Room) {
     room.isGameInProgress = true;
     
-    // Select a random game text
-    const randomText = GAME_TEXTS[Math.floor(Math.random() * GAME_TEXTS.length)];
+    // Generate game text
     const generatedText = generateTypingText(200);
     room.gameText = generatedText;
 
@@ -294,9 +354,7 @@ export default class GameServer {
       countdown--;
       room.countdown = countdown;
       
-      this.io.to(room.id).emit('gameCountdown', { 
-        countdown 
-      });
+      this.io.to(room.id).emit('gameCountdown', { countdown });
       
       if (countdown <= 0) {
         clearInterval(countdownInterval);
@@ -306,8 +364,6 @@ export default class GameServer {
         });
       }
     }, 1000);
-
-    console.log(`Game starting in room ${room.id}`);
   }
 
   private handleProgressUpdate(
@@ -315,7 +371,8 @@ export default class GameServer {
     roomId: string, 
     progress: number, 
     wpm: number, 
-    accuracy: number
+    accuracy: number,
+    finished: boolean
   ) {
     const user = this.connectedUsers.get(socket.id);
     if (!user) return;
@@ -323,57 +380,51 @@ export default class GameServer {
     const room = this.rooms.get(roomId);
     if (!room || !room.isGameInProgress) return;
 
-    // Update player progress
     const player = room.players.find(p => p.id === user.userId);
-    if (player) {
-      player.progress = progress;
-      player.wpm = wpm;
-      player.accuracy = accuracy;
+    if (!player) return;
 
-      // Check if player finished
-      if (progress >= 100 && !player.finished) {
-        player.finished = true;
-        player.position = room.results.length + 1;
-        
-        // Add to results
-        room.results.push({
-          ...player,
-          position: player.position
-        });
+    player.progress = progress;
+    player.wpm = wpm;
+    player.accuracy = accuracy;
+    player.finished = finished;
 
-        // Notify player of their finish position
-        socket.emit('playerFinished', { 
-          position: player.position 
-        });
+    if (finished && !player.position) {
+      player.position = room.results.length + 1;
+      room.results.push({
+        ...player,
+        position: player.position
+      });
 
-        // Check if all players finished
-        if (room.players.every(p => p.finished)) {
-          this.endGame(room);
-        }
+      socket.emit('playerFinished', { position: player.position });
+
+      if (room.players.every(p => p.finished)) {
+        this.endGame(room);
       }
     }
 
-    // Broadcast progress to all players
     this.io.to(roomId).emit('playerProgress', {
       userId: user.userId,
       progress,
       wpm,
       accuracy,
-      finished: player?.finished || false
+      finished
     });
-
-    console.log(`Progress update from ${user.username} in room ${roomId}: ${progress}%`);
   }
 
   private endGame(room: Room) {
     room.isGameInProgress = false;
     
-    // Calculate final positions based on progress and WPM
+    // Calculate final positions
     const sortedResults = [...room.players]
       .sort((a, b) => {
+        // Finished players first
         if (a.finished && !b.finished) return -1;
         if (!a.finished && b.finished) return 1;
+        
+        // Then by WPM
         if (a.wpm !== b.wpm) return b.wpm - a.wpm;
+        
+        // Then by accuracy
         return b.accuracy - a.accuracy;
       })
       .map((player, index) => ({
@@ -384,21 +435,42 @@ export default class GameServer {
     room.results = sortedResults;
     
     // Send results to all players
-    this.io.to(room.id).emit('gameResults', { 
-      results: sortedResults 
-    });
+    this.io.to(room.id).emit('gameResults', { results: sortedResults });
 
-    console.log(`Game ended in room ${room.id}`);
+    // Reset room after game ends
+    room.players.forEach(player => {
+      player.isReady = false;
+      player.progress = 0;
+      player.wpm = 0;
+      player.accuracy = 100;
+      player.finished = false;
+      player.position = undefined;
+    });
+    room.results = [];
+    room.isGameInProgress = false;
+    room.gameText = undefined;
+    room.countdown = undefined;
   }
 
-  private handleInviteFriend(socket: Socket, friendId: string, roomId: string) {
-    const inviter = this.connectedUsers.get(socket.id);
-    if (!inviter) return;
-
+  private handleInviteFriend(
+    socket: Socket, 
+    friendId: string, 
+    roomId: string,
+    from: { userId: string, username: string }
+  ) {
     const room = this.rooms.get(roomId);
-    if (!room) return;
+    if (!room) {
+      socket.emit('error', { message: 'Room not found' });
+      return;
+    }
 
-    // Find friend's socket (in a real app, you'd look up the friend's connection)
+    // Check if friend is already in the room
+    if (room.players.some(p => p.id === friendId)) {
+      socket.emit('error', { message: 'Friend is already in the room' });
+      return;
+    }
+
+    // Find friend's socket
     const friendEntry = [...this.connectedUsers.values()].find(u => u.userId === friendId);
     if (!friendEntry) {
       socket.emit('error', { message: 'Friend is not online' });
@@ -408,39 +480,64 @@ export default class GameServer {
     // Send invitation to friend
     this.io.to(friendEntry.socketId).emit('battleInvitation', {
       roomId,
-      from: {
-        userId: inviter.userId,
-        username: inviter.username
-      }
+      from
     });
-
-    console.log(`Invitation sent to ${friendEntry.username} from ${inviter.username}`);
   }
 
-  private updateOnlineFriends(socket: Socket) {
-    const currentUser = this.connectedUsers.get(socket.id);
-    if (!currentUser) return;
-  
-    // Filter out the current user from online friends
-    const onlineFriends = [...this.connectedUsers.values()].filter(
-      user => user.userId !== currentUser.userId
-    );
-  
-    // Send only to the requesting socket
-    socket.emit('onlineFriends', onlineFriends);
-  }
   private handleDisconnect(socket: Socket) {
     const user = this.connectedUsers.get(socket.id);
     if (!user) return;
-  
+
+    // Find all rooms the user was in
+    const userRooms = [...this.rooms.values()].filter(room => 
+      room.players.some(p => p.id === user.userId)
+    );
+
+    // Handle each room
+    userRooms.forEach(room => {
+      const player = room.players.find(p => p.id === user.userId);
+      if (!player) return;
+
+      if (room.isGameInProgress && !player.finished) {
+        // Mark player as finished if game was ongoing
+        player.finished = true;
+        player.position = room.results.length + 1;
+        room.results.push({
+          ...player,
+          position: player.position
+        });
+
+        // Notify remaining players
+        this.io.to(room.id).emit('playerProgress', {
+          userId: user.userId,
+          progress: player.progress,
+          wpm: player.wpm,
+          accuracy: player.accuracy,
+          finished: true
+        });
+
+        // End game if all players finished
+        if (room.players.every(p => p.finished)) {
+          this.endGame(room);
+        }
+      }
+      
+      // Remove player from room
+      room.players = room.players.filter(p => p.id !== user.userId);
+      
+      if (room.players.length === 0) {
+        this.rooms.delete(room.id);
+      } else {
+        this.io.to(room.id).emit('playerLeft', { userId: user.userId });
+      }
+    });
+
     // Notify others about disconnection
     socket.broadcast.emit('userOffline', {
       userId: user.userId
     });
-  
+
     // Remove from connected users
     this.connectedUsers.delete(socket.id);
-  
-    console.log(`User disconnected: ${user.username} (${user.userId})`);
   }
 }
