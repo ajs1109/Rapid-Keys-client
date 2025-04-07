@@ -32,24 +32,6 @@ export class ApiService {
     this.axiosInstance.interceptors.response.use(
       (response) => response,
       async (error) => {
-        const originalRequest = error.config;
-        if (error.response.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true;
-          const refreshToken = Cookies.get('refresh_token');
-          if (refreshToken) {
-            try {
-              const response = await this.post<{ accessToken: string }>('/auth/refresh', { token: refreshToken });
-              Cookies.set('access_token', response.accessToken);
-              originalRequest.headers['Authorization'] = `Bearer ${response.accessToken}`;
-              return this.axiosInstance(originalRequest);
-            } catch (refreshError) {
-              console.error('Refresh token expired or invalid:', refreshError);
-              Cookies.remove('access_token');
-              Cookies.remove('refresh_token');
-              window.location.href = '/auth';
-            }
-          }
-        }
         const errorMessage = error.response?.data?.message || 'An unexpected error occurred...';
         return Promise.reject(new Error(errorMessage));
       }

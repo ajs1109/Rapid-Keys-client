@@ -3,7 +3,7 @@ import { NODE_ENV, REFRESH_SECRET, TOKEN_SECRET } from "@/config";
 import { User } from "@/types/auth";
 import { NextResponse } from "next/server";
 import { faker } from '@faker-js/faker'
-import loremIpsum from 'lorem-ipsum'
+import { LoremIpsum } from 'lorem-ipsum'
 
 // Cookie options
 export const REFRESH_COOKIE_OPTIONS = {
@@ -47,7 +47,7 @@ export const clearCookies = (res:NextResponse) => {
     res.cookies.delete('access_token');
   }
 
-  const loremGenerator = new loremIpsum.LoremIpsum({
+  const loremGenerator = new LoremIpsum({
     sentencesPerParagraph: {
       max: 5,
       min: 3
