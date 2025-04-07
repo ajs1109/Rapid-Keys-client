@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import useGameStore from '@/store/useGameStore';
+import { useRouter } from 'next/navigation'
 
 type AuthEvent = FormEvent<HTMLFormElement> & {
   target: HTMLFormElement & {
@@ -25,6 +26,8 @@ const AuthForms = () => {
   const [loginError, setLoginError] = useState('');
   const [signupError, setSignupError] = useState('');
   const { setGameState } = useGameStore();
+
+  const router = useRouter();
 
   const handleLogin = async (e: AuthEvent) => { 
     e.preventDefault();
@@ -68,7 +71,7 @@ const AuthForms = () => {
     window.dispatchEvent(new Event('auth-state-changed'));
 
     // Redirect to the menu page
-    window.location.reload();
+    router.push('/menu');
   }
 
   return (

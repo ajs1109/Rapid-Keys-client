@@ -116,63 +116,6 @@ const useStore = create<GameStore>()(
     }
   )
 );
-// Custom hook to handle route checking
-// export const useRouteCheck = () => {
-//   const setIsPublicRoute = useStore((state) => state.setIsPublicRoute);
-
-//   React.useEffect(() => {
-//     const pathname = window.location.pathname;
-//     const isPublic = publicRoutes.includes(pathname);
-//     setIsPublicRoute(isPublic);
-//   }, []);
-// };
-
-// // Custom hook to initialize user data from refresh_token
-// export const useInitializeAuth = () => {
-//   console.log('into useInitializeAuth');
-//   const setAuthUser = useStore((state) => state.setAuthUser);
-//   const setAuthToken = useStore((state) => state.setAuthToken);
-//   const refreshToken = useStore((state) => state.refreshToken);
-
-//   React.useEffect(() => {
-//     const initializeAuth = async () => {
-//       try {
-//         // Fetch refresh_token from cookies
-//         const refreshTokenCookie = document.cookie
-//           .split('; ')
-//           .find((row) => row.startsWith('refresh_token='))
-//           ?.split('=')[1];
-
-//         if (refreshTokenCookie) {
-//           console.log('refresh token:', refreshTokenCookie);
-//           const decoded = await decodeToken(refreshTokenCookie);
-//           if (decoded) {
-//             setAuthUser(decoded);
-//             setAuthToken(refreshTokenCookie);
-//           } else {
-//             console.log('refreshing access token in useInitializeAuth');
-//             // Attempt to refresh the access token
-//             await refreshToken();
-//           }
-//         }
-//       } catch (error) {
-//         console.error('Failed to initialize auth:', error);
-//       }
-//     };
-
-//     initializeAuth();
-//   }, []);
-// };
-
-//export const useAuth = () =>
-  // useStore((state) => ({
-  //   user: state.user,
-  //   token: state.token,
-  //   isAuthenticated: state.token !== null,
-  //   setAuthUser: state.setAuthUser,
-  //   setAuthToken: state.setAuthToken,
-  //   logout: state.logout,
-  // }));
 
   export default useStore;
 // export const useGameState = () => useStore((state) => state.gameState);

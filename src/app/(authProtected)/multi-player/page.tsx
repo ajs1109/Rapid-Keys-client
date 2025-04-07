@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SERVER_URI } from '@/config';
 import useGameStore from '@/store/useGameStore';
 import { Copy, Home, LogIn, RefreshCw, Send, Swords, Target, Timer, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -67,7 +68,7 @@ const MultiPlayer: React.FC = () => {
       return;
     }
 
-    const socketInstance = io(process.env.SERVER_URI || 'http://localhost:3000', {
+    const socketInstance = io(SERVER_URI, {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
