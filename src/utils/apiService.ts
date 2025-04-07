@@ -1,10 +1,11 @@
+import { SERVER_URI } from '@/config';
 import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig } from 'axios';
 import Cookies from 'js-cookie';
 
 export class ApiService {
   private axiosInstance: AxiosInstance;
 
-  constructor(baseURL: string = process.env.SERVER_URI || 'http://localhost:3000') {
+  constructor(baseURL: string = SERVER_URI) {
     baseURL = `${baseURL}/api`;
     this.axiosInstance = axios.create({
       baseURL,

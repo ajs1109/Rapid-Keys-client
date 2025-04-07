@@ -1,6 +1,7 @@
 import * as jose from 'jose';
 import { AuthResponse, User } from '../types/auth';
 import Cookies from 'js-cookie';
+import { JWT_SECRET } from '@/config';
 
 export const AUTH_COOKIE = 'auth_token';
 
@@ -24,7 +25,7 @@ export const authUtils = {
 
 export const decodeToken = async (token: string): Promise<User | null> => {
   try {
-    const secret = process.env.JWT_SECRET || "XES";
+    const secret = JWT_SECRET;
     console.log('jwtsecret:',secret);
     if (!secret) {
       console.error('JWT_SECRET is not defined');
@@ -39,7 +40,10 @@ export const decodeToken = async (token: string): Promise<User | null> => {
     const decodedToken: User = {
       id: payload.user._id as string,
       username: payload.user.username as string,
-      email: payload.user.email as string
+      email: payload.user.email as string,
+      highestWPM: payload.user.highestWPM as number,
+      highestAccuracy: payload.user.highestAccuracy as number,
+      gamesPlayed: payload.user.gamesPlayed as number,
     };
 
     // console.log('decoded token:', decodedToken);

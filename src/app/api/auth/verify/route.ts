@@ -3,6 +3,7 @@ import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from 'jsonwebtoken';
 import { User } from "@/types/auth";
+import { JWT_SECRET } from "@/config";
 
 connect();
 
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const decoded = await verifyToken(token, process.env.JWT_SECRET as string);
+    const decoded = await verifyToken(token, JWT_SECRET);
 
     const user = await UserModel.findById(decoded?.id);
     if (user) { 
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Token expired" }, { status: 401 });
     }
     if (error.name === 'JsonWebTokenError') {
-      return NextResponse.json({ message: "Invalid Token" }, { status: 401 });
+      return NextResponse.json({ message: "Invalid Token" + error }, { status: 401 });
     }
     return NextResponse.json({ message: "Internal Server Error: " + error }, { status: 500 });
   }

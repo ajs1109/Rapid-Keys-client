@@ -3,10 +3,11 @@ import { createServer } from "node:http";
 import next from "next";
 import { Server } from "socket.io";
 import GameServer from "@/socket/game.js";
+import { HOST_NAME, NODE_ENV, PORT } from "@/config";
 
-const dev = process.env.NODE_ENV !== "production";
-const hostname = process.env.HOST_NAME || "localhost";
-const port = parseInt(process.env.PORT || "3000", 10);
+const dev = NODE_ENV !== "production";
+const hostname = HOST_NAME || "localhost";
+const port = parseInt(PORT, 10);
 
 async function startServer() {
     //@ts-ignore
