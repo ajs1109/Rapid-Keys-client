@@ -5,4 +5,4 @@ export const REFRESH_SECRET = process.env.REFRESH_SECRET || 'your-refresh-secret
 export const NODE_ENV = process.env.NODE_ENV || 'development';
 export const HOST_NAME = process.env.HOST_NAME || 'localhost';
 export const PORT = process.env.PORT || '3000';
-export const SERVER_URI = process.env.SERVER_URI || 'https://next-websocket-app-1042819106730.europe-north2.run.app';
+export const SERVER_URI = process.env.SERVER_URI || 'https://rapidkeys-1042819106730.us-central1.run.app';
