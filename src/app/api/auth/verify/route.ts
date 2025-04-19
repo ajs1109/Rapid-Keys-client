@@ -19,7 +19,7 @@ const verifyToken = (token: string, secret: string): Promise<any> => {
 };
 
 export async function POST(req: NextRequest) {
-  console.log('into verify post');
+  //console.log('into verify post');
   const reqBody = await req.json();
   const token = reqBody?.token;
 
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     const user = await UserModel.findById(decoded?.id);
     if (user) { 
-      console.log('from verify:', user);
+      //console.log('from verify:', user);
       return NextResponse.json({ user:{id: user._id as string, username: user.username, email: user.email, highestWPM: user.highestWPM, highestAccuracy: user.highestAccuracy, gamesPlayed: user.gamesPlayed } });
     }
 

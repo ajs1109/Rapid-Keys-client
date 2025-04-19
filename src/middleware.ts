@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
     isAuthenticated = true;
     userData = user;
     //setAuthUser(user);
-    console.log('found user', user);
+    //console.log('found user', user);
   }
   else{
     console.log('no user foundd');
@@ -26,7 +26,7 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthPath = publicRoutes.includes(path);
   const isEmptyPath = path === '/';
-  console.log('path:', path, isAuthenticated, isAuthPath, userData);
+  //console.log('path:', path, isAuthenticated, isAuthPath, userData);
   if (!isAuthenticated && !isAuthPath) {
     return NextResponse.redirect(new URL('/auth', request.url));
   }

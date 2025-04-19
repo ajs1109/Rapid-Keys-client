@@ -115,6 +115,7 @@ export default class GameServer {
 
   private getOnlineFriendsForUser(userId: string) {
     const friends = this.friendsList.get(userId) || [];
+    console.log('connected users:', this.connectedUsers.values(), userId);
     return [...this.connectedUsers.values()]
       .filter(user => friends.includes(user.userId))
       .filter(user => user.userId !== userId);

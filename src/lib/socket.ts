@@ -34,6 +34,7 @@ export default function SocketHandler(_: any, res: NextApiResponseWithSocket) {
           // Send online friends
           const onlineFriends = Array.from(socketUserMap.values())
             .filter(user => user.userId !== userId);
+            
           socket.emit('onlineFriends', onlineFriends);
           
           // Notify others that a new user is online
@@ -86,6 +87,7 @@ export default function SocketHandler(_: any, res: NextApiResponseWithSocket) {
         }
         
         console.log(`Room created: ${roomId}, Private: ${isPrivate}`);
+        console.log(`User ${user.username} created room: ${roomId}`, Array.from(socketUserMap.values()));
       });
       
       // Join an existing room
