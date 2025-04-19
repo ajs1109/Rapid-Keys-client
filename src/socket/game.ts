@@ -1,33 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { generateTypingText } from "@/utils/serverUtils";
-
-interface Player {
-  id: string;
-  username: string;
-  socketId: string;
-  isReady: boolean;
-  progress: number;
-  wpm: number;
-  accuracy: number;
-  finished: boolean;
-  position?: number;
-}
-
-interface Room {
-  id: string;
-  players: Player[];
-  isPrivate: boolean;
-  isGameInProgress: boolean;
-  gameText?: string;
-  countdown?: number;
-  results: Player[];
-}
-
-interface ConnectedUser {
-  userId: string;
-  username: string;
-  socketId: string;
-}
+import { ConnectedUser, Room } from "@/types/multiplayer";
 
 const GAME_TIME = 60; // 60 seconds
 const COUNTDOWN_TIME = 5; // 5 seconds countdown before game starts
@@ -36,7 +9,6 @@ export default class GameServer {
   private io: Server;
   private rooms: Map<string, Room> = new Map();
   private connectedUsers: Map<string, ConnectedUser> = new Map();
-  private friendsList: Map<string, string[]> = new Map();
 
   constructor(io: Server) {
     this.io = io;
@@ -106,23 +78,16 @@ export default class GameServer {
     });
   }
 
-  public addFriend(userId: string, friendId: string) {
-    if (!this.friendsList.has(userId)) {
-      this.friendsList.set(userId, []);
-    }
-    this.friendsList.get(userId)?.push(friendId);
-  }
-
   private getOnlineFriendsForUser(userId: string) {
-    const friends = this.friendsList.get(userId) || [];
-    console.log('connected users:', this.connectedUsers.values(), userId);
+    //const friends = this.friendsList.get(userId) || [];
+    console.log('connected users new:', [...this.connectedUsers.values()], userId);
     return [...this.connectedUsers.values()]
-      .filter(user => friends.includes(user.userId))
       .filter(user => user.userId !== userId);
   }
 
   private updateOnlineFriends(socket: Socket) {
     const currentUser = this.connectedUsers.get(socket.id);
+    console.log('current user:', currentUser);
     if (!currentUser) return;
   
     const onlineFriends = this.getOnlineFriendsForUser(currentUser.userId);
@@ -175,9 +140,9 @@ export default class GameServer {
     socket.emit('roomCreated', { roomId, newRoom });
 
     if (!isPrivate) {
+      console.log('room available:', newRoom);
       this.io.emit('roomAvailable', { 
-        roomId, 
-        playerCount: 1 
+        newRoom
       });
     }
   }
@@ -217,7 +182,7 @@ export default class GameServer {
     });
 
     socket.join(roomId);
-
+    console.log('player.joined.room:', roomId, room.players);
     this.io.to(roomId).emit('playerJoined', { players: room.players });
 
     if (!room.isPrivate) {
