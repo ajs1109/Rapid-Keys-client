@@ -64,7 +64,7 @@ const MultiPlayer: React.FC = () => {
   // Initialize socket connection
   useEffect(() => {
     if (!user || !user.id) {
-      toast.error('Please log in to play multiplayer mode');
+      //toast.error('Please log in to play multiplayer mode');
       return;
     }
 
@@ -608,8 +608,7 @@ const MultiPlayer: React.FC = () => {
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div 
-                  className={`h-2.5 rounded-full transition-all duration-300 ease-out ${
+                <div className={`h-2.5 rounded-full transition-all duration-300 ease-out ${
                     player.finished ? 'bg-green-500' : 'bg-indigo-600'
                   }`} 
                   style={{ 
@@ -713,7 +712,7 @@ const MultiPlayer: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        {!isConnected ? (
+        {!(isConnected && user) ? (
           <div className="text-center p-8">
             <p className="text-xl">Connecting to server...</p>
           </div>

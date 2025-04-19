@@ -1,3 +1,4 @@
+// store/useGameStore.ts
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { GameSettings, GameState, GameMode } from '../types/game';
@@ -22,7 +23,7 @@ interface GameStore {
   setHighScore: (WPM: number, Accuracy: number) => void;
   logout: () => void;
   reset: () => void;
-  refreshToken: () => Promise<void>; // Add method to refresh access token
+  refreshToken: () => Promise<void>;
 }
 
 const defaultSettings: GameSettings = {
@@ -41,83 +42,89 @@ const initialState = {
   highestAccuracy: 0
 };
 
-const useStore = create<GameStore>()(
-  persist(
-    (set) => ({
-      ...initialState,
+// Export the store creation function separately
+export const createGameStore = (preloadedState: Partial<GameStore> = {}) => {
+  return create<GameStore>()(
+    persist(
+      (set) => ({
+        ...initialState,
+        ...preloadedState,
 
-      setGameState: (state) => set({ gameState: state }),
+        setGameState: (state) => set({ gameState: state }),
 
-      setGameMode: (mode) => set({ gameMode: mode }),
+        setGameMode: (mode) => set({ gameMode: mode }),
 
-      updateGameSettings: (settings) =>
-        set((state) => ({
-          gameSettings: { ...state.gameSettings, ...settings },
-        })),
+        updateGameSettings: (settings) =>
+          set((state) => ({
+            gameSettings: { ...state.gameSettings, ...settings },
+          })),
 
-      setAuthUser: (user) =>
-        set({
-          user,
-          gameState: 'menu',
-        }),
- 
-      setAuthToken: (token) =>
-        set({
-          token
-        }),
-
-      setGamesPlayed: (count) => set({gamesPlayed: count}),
-
-      setHighScore: (WPM, Accuracy) => set({highestWPM: WPM, highestAccuracy: Accuracy}),
-
-      logout: async () => {
-        document.cookie = "access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-      },
-
-      reset: () => set(initialState),
-
-      // Method to refresh access token using refresh_token
-      refreshToken: async () => {
-        try {
-          const response = await fetch('/api/auth/refresh', {
-            method: 'POST',
-            credentials: 'include', // Include cookies
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to refresh token');
-          }
-
-          const data = await response.json();
-          const { accessToken, user } = data;
-
+        setAuthUser: (user) =>
           set({
-            token: accessToken,
             user,
-          });
-        } catch (error) {
-          console.error('Token refresh failed:', error);
+            gameState: 'menu',
+          }),
+  
+        setAuthToken: (token) =>
           set({
-            token: null,
-            user: null,
-          });
-        }
-      },
-    }),
-    {
-      name: 'rapid-keys-storage',
-      storage: createJSONStorage(() => localStorage),
+            token
+          }),
 
-      partialize: (state) => ({
-        gameSettings: state.gameSettings,
-        token: state.token,
-        user: state.user,
+        setGamesPlayed: (count) => set({gamesPlayed: count}),
+
+        setHighScore: (WPM, Accuracy) => set({highestWPM: WPM, highestAccuracy: Accuracy}),
+
+        logout: async () => {
+          document.cookie = "access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+        },
+
+        reset: () => set(initialState),
+
+        refreshToken: async () => {
+          try {
+            const response = await fetch('/api/auth/refresh', {
+              method: 'POST',
+              credentials: 'include',
+            });
+
+            if (!response.ok) throw new Error('Failed to refresh token');
+
+            const data = await response.json();
+            set({
+              token: data.accessToken,
+              user: data.user,
+            });
+          } catch (error) {
+            console.error('Token refresh failed:', error);
+            set({
+              token: null,
+              user: null,
+            });
+          }
+        },
       }),
-    }
-  )
-);
+      {
+        name: 'rapid-keys-storage',
+        storage: createJSONStorage(() => localStorage),
+        partialize: (state) => ({
+          gameSettings: state.gameSettings,
+          token: state.token,
+          user: state.user,
+        }),
+      }
+    )
+  );
+};
 
-  export default useStore;
+// Create the default store instance
+const useGameStore = createGameStore();
+
+// Export functions to initialize and use the store
+export const initializeStore = (preloadedState: Partial<GameStore>) => {
+  useGameStore.setState(preloadedState);
+};
+
+export default useGameStore;
 // export const useGameState = () => useStore((state) => state.gameState);
 // export const useGameMode = () => useStore((state) => state.gameMode);
 // export const useGameSettings = () => useStore((state) => state.gameSettings);
