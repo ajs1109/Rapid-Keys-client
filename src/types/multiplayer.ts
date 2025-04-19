@@ -27,6 +27,12 @@ export interface Player {
   position?: number;
 }
 
+export interface ConnectedUser {
+  userId: string;
+  username: string;
+  socketId: string;
+}
+
 export interface GameResult extends Player {
   position: number;
 }
