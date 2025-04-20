@@ -15,14 +15,22 @@ interface AuthLayoutProps {
 }
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children, user }) => {
+  const { setAuthUser, setGamesPlayed, setHighScore, user: userZ } = useStore();
+  useEffect(() => {
+    setAuthUser(user);
+    setGamesPlayed(user.gamesPlayed);
+    setHighScore(user.highestWPM, user.highestAccuracy);
+
+  }, [])
   return (
-    <div className="min-h-screen flex flex-col">
+    userZ && <div className="min-h-screen flex flex-col">
       <Header username={user?.username} />
       <main className={user ? 'flex-1 pt-16' : 'flex-1'}>
         {children}
       </main>
       <Footer />
     </div>
+
   );
 };
 

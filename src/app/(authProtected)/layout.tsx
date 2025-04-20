@@ -53,7 +53,7 @@ export default async function RootLayout({
         <meta name="user-data" content="" />
       </head>
       <body className="antialiased">
-        <InitializeAuth user={user}/>
+        {/* <InitializeAuth user={user}/> */}
         <AuthLayout children={children} user={user}/>
       </body>
     </html>

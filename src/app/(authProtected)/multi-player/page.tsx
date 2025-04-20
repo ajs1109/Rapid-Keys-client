@@ -47,10 +47,18 @@ const MultiPlayer: React.FC = () => {
   const { setGameState, setGameMode, user } = useGameStore();
   const router = useRouter();
 
+  useEffect(() => {
+    console.log("players:", players);
+  }, [players])
+
+  useEffect(() => {
+    console.log("available rooms:", availableRooms);
+  }, [availableRooms])
+
   // Initialize socket connection
   useEffect(() => {
     if (!user || !user.id) {
-      //toast.error('Please log in to play multiplayer mode');
+      toast.error('Please log in to play multiplayer mode');
       return;
     }
 
@@ -114,26 +122,29 @@ const MultiPlayer: React.FC = () => {
             prev.some(r => r.id === newRoom.id) ? prev : [...prev, newRoom]
           );
         } else {
-          setAvailableRooms([newRoom]);
+          setAvailableRooms(prev=>[newRoom]);
         }
-        console.log('available rooms:', availableRooms);
+        setTimeout(()=>{
+          console.log('available rooms:', availableRooms);
+        },1000)
       },
       'roomClosed': ({ roomId }: { roomId: string }) => {
         setAvailableRooms(prev => prev.filter(room => room.id !== roomId));
       },
-      'playerJoined': ({ newplayers }: { newplayers: Player[] }) => {
+      'playerJoined': ({players: newplayers}: {players: Player[]}) => {
         console.log('newplayers:',newplayers);
         setPlayers(newplayers);
         toast("Player Joined", {
-          description: `${players[players.length - 1].username} joined the room`,
+          description: `${newplayers[newplayers.length - 1].username} joined the room`,
         });
       },
       'playerLeft': ({ userId }: { userId: string }) => {
         console.log('player left:', userId);
         console.log(players);
+        const playerLeftUsername = players.find(player => player.id === userId)?.username;
         setPlayers(prev => prev.filter(player => player.id !== userId));
         console.log(players);
-        toast("Player Left", { description: "A player has left the room" });
+        toast("Player Left", { description: `${playerLeftUsername ?? "A player"} has left the room` });
       },
       'playerReadyState': ({ userId, isReady }: { userId: string, isReady: boolean }) => {
         setPlayers(prev => prev.map(player => 
