@@ -141,9 +141,9 @@ export default class GameServer {
 
     if (!isPrivate) {
       console.log('room available:', newRoom);
-      this.io.emit('roomAvailable', { 
+      this.io.emit('roomAvailable', 
         newRoom
-      });
+      );
     }
   }
 
@@ -159,6 +159,8 @@ export default class GameServer {
       socket.emit('error', { message: 'Room not found' });
       return;
     }
+
+    console.log('room :', room)
 
     if (room.isGameInProgress) {
       socket.emit('error', { message: 'Game is already in progress' });
@@ -263,10 +265,7 @@ export default class GameServer {
       this.io.to(roomId).emit('playerLeft', { userId: user.userId });
 
       if (!room.isPrivate) {
-        this.io.emit('roomAvailable', { 
-          roomId, 
-          playerCount: room.players.length 
-        });
+        this.io.emit('roomAvailable', room);
       }
 
       // If only one player left and game was in progress, end the game
