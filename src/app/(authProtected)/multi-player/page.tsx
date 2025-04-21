@@ -16,7 +16,7 @@ interface Friend {
   username: string;
 }
 
-const GAME_TIME = 60; // 60 seconds for multiplayer
+const GAME_TIME = 5; // 60 seconds for multiplayer
 
 const MultiPlayer: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -175,7 +175,9 @@ const MultiPlayer: React.FC = () => {
         setUserFinishPosition(position);
       },
       'gameResults': ({ results }: { results: Player[] }) => {
+        console.log('results from game results:' , results)
         setResults(results);
+        setUserFinishPosition(results.find(result => result.username === user?.username)?.position ?? -1);
         setIsActive(false);
         setGameEnded(true);
         setShowResults(true);
@@ -277,6 +279,7 @@ const MultiPlayer: React.FC = () => {
       const progress = Math.min(100, Math.round((userInput.length / gameText.length) * 100));
       
       if (socket && roomId) {
+        console.log('progrreess:', timeLeft);
         socket.emit('progressUpdate', { 
           roomId, 
           progress, 
@@ -300,6 +303,17 @@ const MultiPlayer: React.FC = () => {
   
   const endGame = () => {
     setIsActive(false);
+    //setShowResults(true);
+    const progress = Math.min(100, Math.round((userInput.length / gameText.length) * 100));
+    if(socket)
+    socket.emit('progressUpdate', { 
+      roomId, 
+      progress, 
+      wpm, 
+      accuracy,
+      finished: true
+    });
+
   };
   
   const resetGame = () => {
