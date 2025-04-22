@@ -16,7 +16,7 @@ interface Friend {
   username: string;
 }
 
-const GAME_TIME = 5; // 60 seconds for multiplayer
+const GAME_TIME = 60; // 60 seconds for multiplayer
 
 const MultiPlayer: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);

@@ -1,9 +1,6 @@
 'use client'
 
-import { loggedInUserData } from '@/lib/api';
-import { publicRoutes } from '@/routes';
 import { User } from '@/types/auth';
-import { usePathname } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import Footer from './Footer';
 import Header from './Header';
