@@ -184,6 +184,7 @@ export default class GameServer {
     });
 
     socket.join(roomId);
+    socket.emit('roomJoined');
     console.log('player.joined.room:', roomId, room.players);
     this.io.to(roomId).emit('playerJoined', { players: room.players });
 
@@ -382,15 +383,8 @@ export default class GameServer {
     // Calculate final positions
     const sortedResults = [...room.players]
       .sort((a, b) => {
-        // Finished players first
-        if (a.finished && !b.finished) return -1;
-        if (!a.finished && b.finished) return 1;
-        
-        // Then by WPM
-        if (a.wpm !== b.wpm) return b.wpm - a.wpm;
-        
-        // Then by accuracy
-        return b.accuracy - a.accuracy;
+        if (a.wpm * a.accuracy !== b.wpm * b.accuracy) return b.wpm * b.accuracy - a.wpm * a.accuracy;
+        return b.wpm - a.wpm;
       })
       .map((player, index) => ({
         ...player,

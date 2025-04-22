@@ -157,6 +157,9 @@ const MultiPlayer: React.FC = () => {
         setTimeLeft(gameTime);
         setCountdown(null);
         setIsActive(true);
+        setPlayers(prev => prev.map(player => 
+          {player.isReady = false; return player;} 
+        ));
         setTimeout(() => hiddenInputRef.current?.focus(), 100);
       },
       'playerProgress': ({ userId, progress, wpm, accuracy, finished }: 
@@ -197,6 +200,10 @@ const MultiPlayer: React.FC = () => {
       },
       'error': ({ message }: { message: string }) => {
         toast.error("Error", { description: message });
+        if(message === 'Room not found') {
+          setRoomId('');
+          setInRoom(false);
+        }
       },
     };
 
@@ -300,7 +307,18 @@ const MultiPlayer: React.FC = () => {
       setUserInput(e.target.value);
     }
   };
-  
+
+  const handleRoomIdInput = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    e.preventDefault();
+    setRoomId(e.target.value);
+  }
+
+  const handlePlayAgain = () => {
+    setShowResults(false);
+    resetGame();
+    console.log('handle play again:', roomId, socket);
+  };
+
   const endGame = () => {
     setIsActive(false);
     //setShowResults(true);
@@ -348,8 +366,11 @@ const MultiPlayer: React.FC = () => {
   const joinRoom = (roomIdToJoin: string) => {
     if (!socket) return;
     socket.emit('joinRoom', { roomId: roomIdToJoin });
-    setRoomId(roomIdToJoin);
-    setInRoom(true);
+
+    socket.once('roomJoined', () => {
+      setRoomId(roomIdToJoin);
+      setInRoom(true);
+    });
   };
   
   const leaveRoom = () => {
@@ -461,8 +482,9 @@ const MultiPlayer: React.FC = () => {
                 placeholder="Enter Room ID"
                 className="flex-1 p-2 border rounded"
                 value={roomId}
-                onChange={e => setRoomId(e.target.value)}
-                onFocus={e => e.target.select()}
+                onChange={handleRoomIdInput}
+                key="roomIdInput"
+                autoFocus
               />
               <Button onClick={() => joinRoom(roomId)} disabled={!roomId}>
                 <LogIn className="h-4 w-4 mr-2" />
@@ -715,10 +737,7 @@ const MultiPlayer: React.FC = () => {
               Home
             </Button>
             <Button 
-              onClick={() => {
-                setShowResults(false);
-                setIsReady(false);
-              }}
+              onClick={handlePlayAgain}
               className="flex items-center gap-2"
             >
               <RefreshCw className="h-4 w-4" />
