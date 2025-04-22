@@ -4,26 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SERVER_URI } from '@/config';
 import useGameStore from '@/store/useGameStore';
+import { Player, Room } from '@/types/multiplayer';
 import { Copy, Home, LogIn, RefreshCw, Send, Swords, Target, Timer, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
-
-interface Player {
-  userId: string;
-  username: string;
-  isReady?: boolean;
-  progress?: number;
-  wpm?: number;
-  accuracy?: number;
-  finished?: boolean;
-}
-
-interface Room {
-  roomId: string;
-  playerCount: number;
-}
 
 interface Friend {
   userId: string;
@@ -61,10 +47,18 @@ const MultiPlayer: React.FC = () => {
   const { setGameState, setGameMode, user } = useGameStore();
   const router = useRouter();
 
+  useEffect(() => {
+    console.log("players:", players);
+  }, [players])
+
+  useEffect(() => {
+    console.log("available rooms:", availableRooms);
+  }, [availableRooms])
+
   // Initialize socket connection
   useEffect(() => {
     if (!user || !user.id) {
-      //toast.error('Please log in to play multiplayer mode');
+      toast.error('Please log in to play multiplayer mode');
       return;
     }
 
@@ -115,33 +109,46 @@ const MultiPlayer: React.FC = () => {
       'userOnline': (user: Friend) => setOnlineFriends(prev => [...prev, user]),
       'userOffline': ({ userId }: { userId: string }) => 
         setOnlineFriends(prev => prev.filter(friend => friend.userId !== userId)),
-      'roomCreated': ({ roomId, newRoom }: { roomId: string, newRoom: any }) => {
+      'roomCreated': ({ roomId, newRoom }: { roomId: string, newRoom: Room  }) => {
         setRoomId(roomId);
         setPlayers(newRoom.players);
         setInRoom(true);
         toast("Room Created", { description: `Room ID: ${roomId}` });
       },
-      'roomAvailable': (room: Room) => {
-        setAvailableRooms(prev => 
-          !prev.some(r => r.roomId === room.roomId) ? [...prev, room] : prev
-        );
+      'roomAvailable': (newRoom: Room) => {
+        console.log('new roooom:', newRoom);
+        if(availableRooms.length > 0){
+          setAvailableRooms(prev => 
+            prev.some(r => r.id === newRoom.id) ? prev : [...prev, newRoom]
+          );
+        } else {
+          setAvailableRooms(prev=>[newRoom]);
+        }
+        setTimeout(()=>{
+          console.log('available rooms:', availableRooms);
+        },1000)
       },
       'roomClosed': ({ roomId }: { roomId: string }) => {
-        setAvailableRooms(prev => prev.filter(room => room.roomId !== roomId));
+        setAvailableRooms(prev => prev.filter(room => room.id !== roomId));
       },
-      'playerJoined': ({ players }: { players: Player[] }) => {
-        setPlayers(players);
+      'playerJoined': ({players: newplayers}: {players: Player[]}) => {
+        console.log('newplayers:',newplayers);
+        setPlayers(newplayers);
         toast("Player Joined", {
-          description: `${players[players.length - 1].username} joined the room`,
+          description: `${newplayers[newplayers.length - 1].username} joined the room`,
         });
       },
       'playerLeft': ({ userId }: { userId: string }) => {
-        setPlayers(prev => prev.filter(player => player.userId !== userId));
-        toast("Player Left", { description: "A player has left the room" });
+        console.log('player left:', userId);
+        console.log(players);
+        const playerLeftUsername = players.find(player => player.id === userId)?.username;
+        setPlayers(prev => prev.filter(player => player.id !== userId));
+        console.log(players);
+        toast("Player Left", { description: `${playerLeftUsername ?? "A player"} has left the room` });
       },
       'playerReadyState': ({ userId, isReady }: { userId: string, isReady: boolean }) => {
         setPlayers(prev => prev.map(player => 
-          player.userId === userId ? { ...player, isReady } : player
+          player.id === userId ? { ...player, isReady } : player
         ));
       },
       'gameCountdown': ({ countdown }: { countdown: number }) => setCountdown(countdown),
@@ -150,12 +157,15 @@ const MultiPlayer: React.FC = () => {
         setTimeLeft(gameTime);
         setCountdown(null);
         setIsActive(true);
+        setPlayers(prev => prev.map(player => 
+          {player.isReady = false; return player;} 
+        ));
         setTimeout(() => hiddenInputRef.current?.focus(), 100);
       },
       'playerProgress': ({ userId, progress, wpm, accuracy, finished }: 
         { userId: string, progress: number, wpm: number, accuracy: number, finished: boolean }) => {
         setPlayers(prev => prev.map(player => 
-          player.userId === userId ? { 
+          player.id === userId ? { 
             ...player, 
             progress, 
             wpm, 
@@ -168,7 +178,9 @@ const MultiPlayer: React.FC = () => {
         setUserFinishPosition(position);
       },
       'gameResults': ({ results }: { results: Player[] }) => {
+        console.log('results from game results:' , results)
         setResults(results);
+        setUserFinishPosition(results.find(result => result.username === user?.username)?.position ?? -1);
         setIsActive(false);
         setGameEnded(true);
         setShowResults(true);
@@ -188,6 +200,10 @@ const MultiPlayer: React.FC = () => {
       },
       'error': ({ message }: { message: string }) => {
         toast.error("Error", { description: message });
+        if(message === 'Room not found') {
+          setRoomId('');
+          setInRoom(false);
+        }
       },
     };
 
@@ -270,6 +286,7 @@ const MultiPlayer: React.FC = () => {
       const progress = Math.min(100, Math.round((userInput.length / gameText.length) * 100));
       
       if (socket && roomId) {
+        console.log('progrreess:', timeLeft);
         socket.emit('progressUpdate', { 
           roomId, 
           progress, 
@@ -290,9 +307,31 @@ const MultiPlayer: React.FC = () => {
       setUserInput(e.target.value);
     }
   };
-  
+
+  const handleRoomIdInput = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    e.preventDefault();
+    setRoomId(e.target.value);
+  }
+
+  const handlePlayAgain = () => {
+    setShowResults(false);
+    resetGame();
+    console.log('handle play again:', roomId, socket);
+  };
+
   const endGame = () => {
     setIsActive(false);
+    //setShowResults(true);
+    const progress = Math.min(100, Math.round((userInput.length / gameText.length) * 100));
+    if(socket)
+    socket.emit('progressUpdate', { 
+      roomId, 
+      progress, 
+      wpm, 
+      accuracy,
+      finished: true
+    });
+
   };
   
   const resetGame = () => {
@@ -327,8 +366,11 @@ const MultiPlayer: React.FC = () => {
   const joinRoom = (roomIdToJoin: string) => {
     if (!socket) return;
     socket.emit('joinRoom', { roomId: roomIdToJoin });
-    setRoomId(roomIdToJoin);
-    setInRoom(true);
+
+    socket.once('roomJoined', () => {
+      setRoomId(roomIdToJoin);
+      setInRoom(true);
+    });
   };
   
   const leaveRoom = () => {
@@ -357,7 +399,7 @@ const MultiPlayer: React.FC = () => {
     if (!socket || !roomId || !friendInviteId) return;
     
     // Check if friend is already in the room
-    if (players.some(p => p.userId === friendInviteId)) {
+    if (players.some(p => p.id === friendInviteId)) {
       toast.error("Friend is already in the room");
       return;
     }
@@ -418,9 +460,9 @@ const MultiPlayer: React.FC = () => {
               {availableRooms.length > 0 ? (
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {availableRooms.map(room => (
-                    <div key={room.roomId} className="flex justify-between items-center">
-                      <span>Room {room.roomId.substring(0, 8)} ({room.playerCount} players)</span>
-                      <Button size="sm" onClick={() => joinRoom(room.roomId)}>
+                    <div key={room.id} className="flex justify-between items-center">
+                      <span>Room {room.id} ({room.players?.length} players)</span>
+                      <Button size="sm" onClick={() => joinRoom(room.id)}>
                         Join
                       </Button>
                     </div>
@@ -440,8 +482,9 @@ const MultiPlayer: React.FC = () => {
                 placeholder="Enter Room ID"
                 className="flex-1 p-2 border rounded"
                 value={roomId}
-                onChange={e => setRoomId(e.target.value)}
-                onFocus={e => e.target.select()}
+                onChange={handleRoomIdInput}
+                key="roomIdInput"
+                autoFocus
               />
               <Button onClick={() => joinRoom(roomId)} disabled={!roomId}>
                 <LogIn className="h-4 w-4 mr-2" />
@@ -481,7 +524,7 @@ const MultiPlayer: React.FC = () => {
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <span className='flex'>
-                <h3 className="text-xl font-semibold">Room: {roomId.substring(0, 20)} </h3>
+                <h3 className="text-xl font-semibold">Room: {roomId} </h3>
                 <button title='Copy Room Id' onClick={copyRoomId}>
                   <Copy className="h-4 w-4 mx-4"/>
                 </button>
@@ -495,7 +538,7 @@ const MultiPlayer: React.FC = () => {
               <h4 className="font-medium mb-2">Players:</h4>
               <div className="space-y-2">
                 {players.map(player => (
-                  <div key={player.userId} className="flex items-center justify-between">
+                  <div key={player.id} className="flex items-center justify-between">
                     <div className="flex items-center">
                       <span className="font-medium">{player.username}</span>
                       {player.isReady && (
@@ -596,11 +639,11 @@ const MultiPlayer: React.FC = () => {
         <h3 className="text-xl font-semibold mb-4">Battle Progress</h3>
         <div className="space-y-4">
           {players.map(player => (
-            <div key={player.userId} className="space-y-1">
+            <div key={player.id} className="space-y-1">
               <div className="flex justify-between items-center">
                 <span className="font-medium">
                   {player.username} 
-                  {user?.id === player.userId && " (You)"}
+                  {user?.id === player.id && " (You)"}
                   {player.finished && " 🏁"}
                 </span>
                 <span className="text-sm text-gray-500">
@@ -662,14 +705,14 @@ const MultiPlayer: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {results.map((result, index) => (
-                  <tr key={result.userId} className={user?.id === result.userId ? "bg-indigo-50" : ""}>
+                  <tr key={result.id} className={user?.id === result.id ? "bg-indigo-50" : ""}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{index + 1}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {result.username}
-                        {user?.id === result.userId && " (You)"}
+                        {user?.id === result.id && " (You)"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -694,10 +737,7 @@ const MultiPlayer: React.FC = () => {
               Home
             </Button>
             <Button 
-              onClick={() => {
-                setShowResults(false);
-                setIsReady(false);
-              }}
+              onClick={handlePlayAgain}
               className="flex items-center gap-2"
             >
               <RefreshCw className="h-4 w-4" />
