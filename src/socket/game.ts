@@ -2,7 +2,7 @@ import { Server, Socket } from "socket.io";
 import { generateTypingText } from "@/utils/serverUtils";
 import { ConnectedUser, Room } from "@/types/multiplayer";
 
-const GAME_TIME = 5; // 60 seconds
+const GAME_TIME = 60; // 60 seconds
 const COUNTDOWN_TIME = 5; // 5 seconds countdown before game starts
 
 export default class GameServer {
