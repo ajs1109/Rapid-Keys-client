@@ -12,14 +12,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Settings, LogOut, User, Keyboard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import useStore from '@/store/useGameStore';
+import useGameStore from '@/store/useGameStore';
 
 interface HeaderProps {
   username?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({ username = 'Guest' }) => {
-  const { logout } = useStore()
+  const { logout } = useGameStore()
   const router = useRouter();
   const handleLogout = async () => {
     try {
@@ -39,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({ username = 'Guest' }) => {
   return (
     <header className="border-b bg-white/80 backdrop-blur-sm fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push('/')}>
           <Keyboard className="h-6 w-6 text-violet-600" />
           <span className="text-xl font-bold text-violet-600">Rapid Keys</span>
         </div>
