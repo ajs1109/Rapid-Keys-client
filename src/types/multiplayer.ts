@@ -33,6 +33,12 @@ export interface ConnectedUser {
   socketId: string;
 }
 
+export interface Friend {
+  userId: string;
+  username: string;
+}
+
+
 export interface GameResult extends Player {
   position: number;
 }

@@ -12,17 +12,3 @@ export interface User {
     token: string;
     accessToken: string;
   }
-
-  export interface DecodedToken {
-    id: string;
-    username: string;
-    email: string;
-    iat?: number;
-    exp?: number;
-  }
-
-  export interface MongoErrorResponse {
-    message: string;
-    code?: number;
-    field?: string;
-  }

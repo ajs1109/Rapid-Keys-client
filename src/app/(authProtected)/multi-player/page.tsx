@@ -4,17 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SERVER_URI } from '@/config';
 import useGameStore from '@/store/useGameStore';
-import { Player, Room } from '@/types/multiplayer';
+import { Friend, Player, Room } from '@/types/multiplayer';
 import { Copy, Home, LogIn, RefreshCw, Send, Swords, Target, Timer, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
-
-interface Friend {
-  userId: string;
-  username: string;
-}
 
 const GAME_TIME = 60; // 60 seconds for multiplayer
 
