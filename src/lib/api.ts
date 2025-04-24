@@ -105,7 +105,7 @@ export const updateScore = async(userId: string, wpm: number, accuracy: number, 
 
 export const updateProfile = async(user: EditUser): Promise<{message: string, user?: User}> => {
   try{
-    const data = await apiService.put<{message: string, success: boolean}>(`/edit/update-profile`, user );
+    const data = await apiService.put<{message: string, success: boolean}>(`/edit/update-profile`, user);
     return data;
   } catch (error) {
     throw error;
