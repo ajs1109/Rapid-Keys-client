@@ -1,14 +1,12 @@
 import { connect } from "@/dbConfig/dbConfig";
 import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
-import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from "@/config";
 import { verifyToken } from "@/utils/auth";
 
 connect();
 
 export async function POST(req: NextRequest) {
-  //console.log('into verify post');
   const reqBody = await req.json();
   const token = reqBody?.token;
 
