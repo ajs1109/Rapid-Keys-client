@@ -1,5 +1,6 @@
 import useStore from '@/store/useGameStore';
 import { AuthResponse, User } from '@/types/auth';
+import { EditUser } from '@/types/edit';
 import { apiService } from '@/utils/apiService';
 
 export const login = async (email: string, password: string): Promise<AuthResponse> => {
@@ -96,6 +97,42 @@ export const generateWords = async(count: number): Promise<{words: string}> => {
 export const updateScore = async(userId: string, wpm: number, accuracy: number, gamesPlayed: number): Promise<{message: string, success: boolean}> => {
   try{
     const data = await apiService.post<{message: string, success: boolean}>(`/game/update-score`, {userId, wpm, accuracy, gamesPlayed});
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export const updateProfile = async(user: EditUser): Promise<{message: string, user?: User}> => {
+  try{
+    const data = await apiService.put<{message: string, success: boolean}>(`/edit/update-profile`, user );
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export const deleteScores = async(): Promise<{message: string, success: boolean}> => {
+  try{
+    const data = await apiService.post<{message: string, success: boolean}>(`/game/update-score`);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export const checkUsernameAvailability = async(username: string): Promise<{message: string, available: boolean}> => {
+  try{
+    const data = await apiService.post<{message: string, available: boolean}>(`/auth/verify-unique-username`, {username});
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export const checkEmailAvailability = async(email: string): Promise<{message: string, available: boolean}> => {
+  try{
+    const data = await apiService.post<{message: string, available: boolean}>(`/auth/verify-unique-email`, {email});
     return data;
   } catch (error) {
     throw error;

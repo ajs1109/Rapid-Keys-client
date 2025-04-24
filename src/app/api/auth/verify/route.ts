@@ -3,19 +3,9 @@ import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from "@/config";
+import { verifyToken } from "@/utils/auth";
 
 connect();
-
-const verifyToken = (token: string, secret: string): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    jwt.verify(token, secret, (error, decoded) => {
-      if (error) {
-        return reject(error);
-      }
-      resolve(decoded);
-    });
-  });
-};
 
 export async function POST(req: NextRequest) {
   //console.log('into verify post');
