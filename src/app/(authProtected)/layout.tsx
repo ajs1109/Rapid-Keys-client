@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { verifyUser } from '@/lib/api';
 import { redirect } from 'next/navigation';
 import { User } from '@/types/auth';
+import { apiService } from '@/utils/apiService';
 
 export const metadata: Metadata = {
   title: "Rapid Keys",
@@ -19,6 +20,7 @@ export default async function RootLayout({
   const accessToken = cookieList.get('access_token')?.value ?? ''
   let user: User | null = null;
   try {
+    apiService.setupHeader("Authorization", `Bearer ${accessToken}`);
     const { user: newUser } = await verifyUser(accessToken);
     if(newUser){
       user = newUser;

@@ -1,8 +1,8 @@
-import { connect } from "@/dbConfig/dbConfig";
+import { dbConfig } from "@/dbConfig/dbConfig";
 import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
-connect();
 
+dbConfig.connect();
 export async function POST(req: NextRequest) {
     const reqBody = await req.json();
     const { username } = reqBody;

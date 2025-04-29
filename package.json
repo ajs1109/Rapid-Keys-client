@@ -10,7 +10,7 @@
     "dev:server": "ts-node server.ts",
     "newsoc": "tsx server.ts",
     "plswork:server": "nodemon --watch 'server/**/*.ts' --exec tsx server.ts",
-    "plswork": "next plswork & npm run plswork:server",
+    "plswork": "npm run plswork:server",
     "build": "next build",
     "start": "next start",
     "socketstart": "NODE_ENV=production node server.ts",

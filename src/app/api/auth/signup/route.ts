@@ -1,12 +1,11 @@
-import { connect } from "@/dbConfig/dbConfig";
+import { dbConfig } from "@/dbConfig/dbConfig";
 import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from 'jsonwebtoken';
 import { User } from "@/types/auth";
 import { JWT_SECRET } from "@/config";
 
-connect();
-
+dbConfig.connect();
 export async function POST(request: NextRequest) {
     try{
         const reqBody = await request.json();
