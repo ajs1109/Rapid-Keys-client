@@ -1,9 +1,8 @@
-import { connect } from "@/dbConfig/dbConfig";
+import { dbConfig } from "@/dbConfig/dbConfig";
 import { generateTypingText } from "@/utils/serverUtils";
 import { NextRequest, NextResponse } from "next/server";
 
-connect();
-
+dbConfig.connect();
 export async function POST(req: NextRequest) {
   console.log('into generate-words');
   const reqBody = await req.json();

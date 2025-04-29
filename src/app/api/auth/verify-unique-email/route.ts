@@ -1,12 +1,12 @@
-import { connect } from "@/dbConfig/dbConfig";
+import { dbConfig } from "@/dbConfig/dbConfig";
 import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
-connect();
 
+dbConfig.connect();
 export async function POST(req: NextRequest) {
     const reqBody = await req.json();
     const { email } = reqBody;
-
+    console.log('cookeies from email:', req.headers);
     if (!email) {
         return NextResponse.json({ message: "Email does not exist", available: false }, { status: 200 });
     }
