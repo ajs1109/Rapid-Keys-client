@@ -2,11 +2,12 @@ import mongoose, { Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 // Create an interface representing the document
-interface IUser extends Document {
+export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
-  highScore: number;
+  highestWPM: number;
+  highestAccuracy: number;
   gamesPlayed: number;
   createdAt: Date;
   updatedAt: Date;

@@ -207,9 +207,9 @@ const ProfilePage = () => {
         newErrors.currentPassword = 'Current password is required';
       }
       
-      if (formData.newPassword && formData.newPassword.length < 6) {
-        newErrors.newPassword = 'Password must be at least 6 characters';
-      }
+      // if (formData.newPassword && formData.newPassword.length < 6) {
+      //   newErrors.newPassword = 'Password must be at least 6 characters';
+      // }
       
       if (formData.newPassword !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Passwords do not match';
@@ -291,20 +291,6 @@ const ProfilePage = () => {
       });
     } finally {
       setLoading(prev => ({ ...prev, delete: false }));
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      setLoading(prev => ({ ...prev, logout: true }));
-      logout();
-      router.refresh();
-    } catch (error) {
-      setErrors({
-        form: error instanceof Error ? error.message : 'Failed to logout'
-      });
-    } finally {
-      setLoading(prev => ({ ...prev, logout: false }));
     }
   };
 
