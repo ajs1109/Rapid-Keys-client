@@ -107,6 +107,8 @@ export default class GameServer {
       userId: data.userId,
       username: data.username
     });
+    console.log('user connected:', data.userId, data.username, this.rooms);
+    socket.emit('availableRooms', [...this.rooms.values()].filter(room => !room.isPrivate))
   }
 
   private handleCreateRoom(socket: Socket, isPrivate: boolean) {
@@ -184,9 +186,9 @@ export default class GameServer {
     });
 
     socket.join(roomId);
-    socket.emit('roomJoined');
+    socket.emit('roomJoined', { players: room.players });
     console.log('player.joined.room:', roomId, room.players);
-    this.io.to(roomId).emit('playerJoined', { players: room.players });
+    socket.broadcast.to(roomId).emit('playerJoined', { players: room.players });
 
     if (!room.isPrivate) {
       this.io.emit('roomAvailable', { 

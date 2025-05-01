@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { SERVER_URI } from '@/config';
 import useGameStore from '@/store/useGameStore';
 import { Friend, Player, Room } from '@/types/multiplayer';
+import { errorToast, successToast } from '@/utils/customToast';
 import { Copy, Home, LogIn, RefreshCw, Send, Swords, Target, Timer, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
@@ -53,7 +54,7 @@ const MultiPlayer: React.FC = () => {
   // Initialize socket connection
   useEffect(() => {
     if (!user || !user.id) {
-      toast.error('Please log in to play multiplayer mode');
+      errorToast('Please log in to play multiplayer mode');
       return;
     }
 
@@ -108,7 +109,7 @@ const MultiPlayer: React.FC = () => {
         setRoomId(roomId);
         setPlayers(newRoom.players);
         setInRoom(true);
-        toast("Room Created", { description: `Room ID: ${roomId}` });
+        successToast("Room Created", `Room ID: ${roomId}` );
       },
       'roomAvailable': (newRoom: Room) => {
         console.log('new roooom:', newRoom);
@@ -200,6 +201,9 @@ const MultiPlayer: React.FC = () => {
           setInRoom(false);
         }
       },
+      'availableRooms': (rooms: Room[]) => {
+        setAvailableRooms(rooms);
+      }
     };
 
     Object.entries(socketListeners).forEach(([event, handler]) => {
@@ -362,7 +366,8 @@ const MultiPlayer: React.FC = () => {
     if (!socket) return;
     socket.emit('joinRoom', { roomId: roomIdToJoin });
 
-    socket.once('roomJoined', () => {
+    socket.once('roomJoined', ({players: newplayers}: {players: Player[]}) => {
+      setPlayers(newplayers);
       setRoomId(roomIdToJoin);
       setInRoom(true);
     });
@@ -560,9 +565,9 @@ const MultiPlayer: React.FC = () => {
           
           <Card className="p-6">
             <h3 className="text-xl font-semibold mb-4">Invite Friends</h3>
-            {onlineFriends.length > 0 ? (
+            {onlineFriends.filter(friend => !players.find(player => player.id === friend.userId)).length > 0 ? (
               <div className="space-y-2 max-h-48 overflow-y-auto">
-                {onlineFriends.map(friend => (
+                {onlineFriends.filter(friend => !players.find(player => player.id === friend.userId)).map(friend => (
                   <div key={friend.userId} className="flex justify-between items-center">
                     <span>{friend.username}</span>
                     <Button
