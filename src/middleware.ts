@@ -6,7 +6,6 @@ import { apiService } from "./utils/apiService";
 
 export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("access_token")?.value;
-  console.log("access_token from middleware:", accessToken);
   let isAuthenticated = false;
   let userData: User | null = null;
   apiService.setupHeader("Authorization", `Bearer ${accessToken}`);

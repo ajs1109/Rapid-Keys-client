@@ -5,12 +5,12 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, CheckCircle, Loader2, Trash2, X, Check } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, Trash2, X, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import useGameStore from '@/store/useGameStore';
 import { updateProfile, deleteScores, checkUsernameAvailability, checkEmailAvailability } from '@/lib/api';
 import { EditUser } from '@/types/edit';
+import { errorToast, successToast } from '@/utils/customToast';
 
 const ProfilePage = () => {
   const { user, setAuthUser, setGameState, logout } = useGameStore();
@@ -33,7 +33,6 @@ const ProfilePage = () => {
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [success, setSuccess] = useState('');
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   
   // Username and email availability states
@@ -222,7 +221,6 @@ const ProfilePage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccess('');
     
     if (!validateForm()) return;
     
@@ -251,8 +249,7 @@ const ProfilePage = () => {
       // Reset availability states
       setUsernameAvailable(null);
       setEmailAvailable(null);
-      
-      setSuccess('Profile updated successfully!');
+      successToast('Profile updated successfully!');
       setShowPasswordFields(false);
       setFormData(prev => ({
         ...prev,
@@ -272,6 +269,10 @@ const ProfilePage = () => {
   const handleClearScores = async () => {
     try {
       setLoading(prev => ({ ...prev, delete: true }));
+      if(user?.highestAccuracy === 0 && user?.highestWPM === 0 && user?.gamesPlayed === 0){
+        errorToast('No scores to clear!');
+        return;
+      }
       await deleteScores();
       
       // Update local user state
@@ -284,7 +285,7 @@ const ProfilePage = () => {
         });
       }
       
-      setSuccess('Your scores have been cleared successfully!');
+      successToast('Scores cleared successfully!');
     } catch (error) {
       setErrors({
         form: error instanceof Error ? error.message : 'Failed to clear scores'
@@ -312,20 +313,6 @@ const ProfilePage = () => {
           </p>
         </div>
         
-        {errors.form && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{errors.form}</AlertDescription>
-          </Alert>
-        )}
-        
-        {success && (
-          <Alert>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <AlertDescription>{success}</AlertDescription>
-          </Alert>
-        )}
-
         <Card>
           <CardHeader>
             <CardTitle>Account Information</CardTitle>
