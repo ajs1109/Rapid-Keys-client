@@ -27,7 +27,6 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, user }) => {
       </main>
       <Footer />
     </div>
-
   );
 };
 
