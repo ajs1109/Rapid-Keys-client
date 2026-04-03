@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import useGameStore from '@/store/useGameStore';
 import { useRouter } from 'next/navigation'
+import { errorToast, successToast } from '@/utils/customToast';
 
 type AuthEvent = FormEvent<HTMLFormElement> & {
   target: HTMLFormElement & {
@@ -23,15 +24,12 @@ type AuthEvent = FormEvent<HTMLFormElement> & {
 };
 
 const AuthForms = () => {
-  const [loginError, setLoginError] = useState('');
-  const [signupError, setSignupError] = useState('');
   const { setGameState } = useGameStore();
 
   const router = useRouter();
 
   const handleLogin = async (e: AuthEvent) => { 
     e.preventDefault();
-    setLoginError('');
     
     try {
       const formData = new FormData(e.target);
@@ -42,13 +40,12 @@ const AuthForms = () => {
 
       onAuthSuccess();
     } catch (error) {
-      setLoginError(error instanceof Error ? error.message : 'Login failed');
+      errorToast(error instanceof Error ? error.message : 'Login failed');
     }
   };
 
   const handleSignup = async (e: AuthEvent) => {
     e.preventDefault();
-    setSignupError('');
     
     try {
       const formData = new FormData(e.target);
@@ -60,13 +57,13 @@ const AuthForms = () => {
 
       onAuthSuccess();
     } catch (error) {
-      setSignupError(error instanceof Error ? error.message : 'Signup failed');
+      errorToast(error instanceof Error ? error.message : 'Signup failed')
     }
   };
 
   const onAuthSuccess = () => {
     setGameState('menu');
-
+    //successToast('Welcome!');
     // Dispatch an event to sync auth state
     window.dispatchEvent(new Event('auth-state-changed'));
 
@@ -93,12 +90,6 @@ const AuthForms = () => {
           <TabsContent value="login">
             <CardContent>
               <form onSubmit={handleLogin}>
-                {loginError && (
-                  <Alert variant="destructive" className="mb-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription className='pt-1'>{loginError}</AlertDescription>
-                  </Alert>
-                )}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email or Username</Label>
@@ -130,12 +121,6 @@ const AuthForms = () => {
           <TabsContent value="signup">
             <CardContent>
               <form onSubmit={handleSignup}>
-                {signupError && (
-                  <Alert variant="destructive" className="mb-4">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{signupError}</AlertDescription>
-                  </Alert>
-                )}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-username">Username</Label>

@@ -1,7 +1,5 @@
 import { SERVER_URI } from '@/config';
 import axios, { AxiosInstance, AxiosResponse, AxiosRequestConfig } from 'axios';
-import { getAccessToken } from './clientUtils';
-import Cookies from 'js-cookie';
 
 export class ApiService {
   private axiosInstance: AxiosInstance;
