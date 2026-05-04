@@ -1,7 +1,5 @@
 import { dbConfig } from "@/dbConfig/dbConfig";
-import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
-import { User } from "@/types/auth";
 import { getUserFromToken } from "@/utils/auth";
 
 
@@ -19,7 +17,7 @@ export async function DELETE(req: NextRequest) {
   await user.save();
   return NextResponse.json({ message: "User updated", success: true }, { status: 200 });
   }
-  catch(error:any){
+  catch(error: unknown){
     console.log("Error in delete-scores:", error);
     return NextResponse.json({ message: "Internal Server Error", success: false }, { status: 500 });
   }

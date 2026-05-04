@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rapid Keys - Select Your Arena</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#ecedf6",
+                        "primary-dim": "#ba00fe",
+                        "secondary-fixed-dim": "#00deec",
+                        "primary-fixed-dim": "#cf62ff",
+                        "tertiary-fixed-dim": "#5def8f",
+                        "on-surface-variant": "#a9abb3",
+                        "on-error": "#490013",
+                        "background": "#0b0e14",
+                        "surface-variant": "#22262f",
+                        "secondary-dim": "#00deec",
+                        "on-secondary-fixed": "#003f43",
+                        "secondary": "#00eefc",
+                        "on-primary-fixed": "#000000",
+                        "inverse-surface": "#f9f9ff",
+                        "on-secondary": "#005359",
+                        "error-container": "#a70138",
+                        "surface-container-low": "#10131a",
+                        "tertiary-dim": "#5def8f",
+                        "tertiary-container": "#6dfe9c",
+                        "on-background": "#ecedf6",
+                        "surface-bright": "#282c36",
+                        "error": "#ff6e84",
+                        "surface-tint": "#de8eff",
+                        "error-dim": "#d73357",
+                        "inverse-primary": "#9900d1",
+                        "primary": "#de8eff",
+                        "on-tertiary-fixed-variant": "#006a34",
+                        "primary-fixed": "#d779ff",
+                        "outline-variant": "#45484f",
+                        "secondary-fixed": "#00eefc",
+                        "surface-container": "#161a21",
+                        "on-error-container": "#ffb2b9",
+                        "on-tertiary-fixed": "#004a22",
+                        "surface": "#0b0e14",
+                        "secondary-container": "#006970",
+                        "on-secondary-container": "#e3fdff",
+                        "on-primary": "#4f006e",
+                        "on-secondary-fixed-variant": "#005e64",
+                        "tertiary": "#c4ffcd",
+                        "on-tertiary": "#006833",
+                        "surface-dim": "#0b0e14",
+                        "surface-container-lowest": "#000000",
+                        "primary-container": "#d779ff",
+                        "tertiary-fixed": "#6dfe9c",
+                        "on-primary-container": "#3d0056",
+                        "on-primary-fixed-variant": "#4b0069",
+                        "inverse-on-surface": "#52555c",
+                        "surface-container-high": "#1c2028",
+                        "outline": "#73757d",
+                        "surface-container-highest": "#22262f",
+                        "on-tertiary-container": "#005f2e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .border-beam {
+            position: relative;
+        }
+        .border-beam::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: conic-gradient(from 0deg, transparent, #de8eff, transparent 25%);
+            border-radius: inherit;
+            z-index: -1;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        .glass-card {
+            backdrop-filter: blur(20px);
+        }
+        .velocity-bg {
+            background-image: radial-gradient(circle at 50% 50%, #161a21 0%, #0b0e14 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .velocity-bg::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(222, 142, 255, 0.03) 50px),
+                              repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(222, 142, 255, 0.03) 50px);
+            transform: perspective(500px) rotateX(60deg);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen velocity-bg select-none">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 flex items-center justify-between px-8 py-4 w-full bg-slate-950/60 backdrop-blur-xl bg-gradient-to-b from-purple-500/10 to-transparent shadow-[0_8px_32px_rgba(0,0,0,0.37)]">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-bold tracking-wider text-purple-500 italic font-['Space_Grotesk']">Rapid Keys</span>
+<div class="hidden md:flex gap-6 font-['Space_Grotesk'] tracking-tight">
+<a class="text-slate-400 hover:text-slate-200 transition-colors hover:bg-white/5 px-3 py-1 rounded-lg" href="#">Battle</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors hover:bg-white/5 px-3 py-1 rounded-lg" href="#">Practice</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors hover:bg-white/5 px-3 py-1 rounded-lg" href="#">Leaderboard</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden lg:flex items-center bg-surface-container-highest/50 px-4 py-2 rounded-full border border-outline-variant/10">
+<span class="material-symbols-outlined text-slate-400 text-sm mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface w-48" placeholder="Search competitions..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-slate-400 hover:text-purple-400 transition-colors active:scale-95" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-slate-400 hover:text-purple-400 transition-colors active:scale-95" data-icon="settings">settings</button>
+<div class="h-10 w-10 rounded-full bg-surface-container-high border border-purple-500/30 overflow-hidden">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="User profile avatar close-up of a young male with short hair and a neutral expression in a professional lighting setup" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACFgTykwilbsXHuqrzCUd3Wg6T4N0R5GS8UnZEnARaNgHwSp6p8HOpsSrxWMZAag6BseCrlpxbkcfA34kRMpGSNIVozwJUHyp_HHOHkZcP1lFbJs_BcHihwnmyXwQG9oQNvt2IYsr6ZCdq99jEHaW_NA6AdtzdTGuCVwT7IpSp6ro57ozBdoSRlTeGC0WSs8cC0KlGMqpjieYVVDmfhy2ERALH0M1fZaEccjM16CTJhS42mW4TNjAtM-LRzcErPUpm2P-ZjGlE00c"/>
+</div>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 pt-20 flex flex-col h-full border-r border-white/5 bg-slate-900/40 backdrop-blur-md shadow-2xl font-['Space_Grotesk'] font-medium">
+<div class="px-6 py-8 flex items-center gap-4 border-b border-white/5">
+<div class="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="rocket_launch" data-weight="fill" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+</div>
+<div>
+<div class="text-cyan-400 font-bold">Pro Typer</div>
+<div class="text-slate-500 text-xs uppercase tracking-widest">120 WPM Avg</div>
+</div>
+</div>
+<nav class="flex-1 py-6">
+<a class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 hover:text-cyan-300 transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="public">public</span>
+<span>Global Lobby</span>
+</a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 hover:text-cyan-300 transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Friends</span>
+</a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 hover:text-cyan-300 transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span>Messages</span>
+</a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 hover:text-cyan-300 transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="emoji_events">emoji_events</span>
+<span>Achievements</span>
+</a>
+</nav>
+<div class="p-6">
+<button class="w-full py-3 bg-cyan-500/20 text-cyan-400 border border-cyan-400/50 rounded-lg hover:bg-cyan-500 hover:text-black transition-all active:scale-95 font-bold uppercase tracking-widest text-sm">
+                Create Room
+            </button>
+</div>
+<div class="py-6 border-t border-white/5">
+<a class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 hover:text-cyan-300 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>Support</span>
+</a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 hover:text-cyan-300 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Log Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 min-h-screen px-12 pb-12 flex flex-col items-center justify-center relative z-10">
+<!-- Heading Cluster -->
+<div class="text-center mb-16 space-y-4">
+<h1 class="text-6xl md:text-8xl font-headline font-extrabold italic tracking-tighter text-on-surface uppercase mix-blend-lighten">
+                SELECT YOUR <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] animate-pulse">ARENA</span>
+</h1>
+<p class="text-on-surface-variant text-xl md:text-2xl font-light tracking-wide max-w-2xl mx-auto">
+                Hone your skills in isolation or dominate the global circuit.
+            </p>
+</div>
+<!-- Mode Selection Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-10 w-full max-w-7xl px-4">
+<!-- PRACTICE RANGE -->
+<div class="group relative bg-slate-950/40 glass-card rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 border border-white/5 hover:border-secondary/30">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="p-10 flex flex-col h-full relative z-10">
+<div class="flex justify-between items-start mb-12">
+<div class="w-16 h-16 rounded-xl bg-surface-container-highest flex items-center justify-center text-secondary shadow-[0_0_20px_rgba(0,238,252,0.1)]">
+<span class="material-symbols-outlined text-4xl" data-icon="self_improvement">self_improvement</span>
+</div>
+<div class="text-right">
+<div class="text-label-sm text-on-surface-variant uppercase tracking-widest mb-1">Your Best</div>
+<div class="text-4xl font-headline font-bold text-secondary">142 <span class="text-lg font-light text-on-surface-variant">WPM</span></div>
+</div>
+</div>
+<h2 class="text-4xl font-headline font-bold text-on-surface mb-4">PRACTICE RANGE</h2>
+<p class="text-on-surface-variant text-lg leading-relaxed mb-8">
+                        Experience <span class="text-secondary">Zen Mode</span>. A distraction-free environment designed to build muscle memory and peak accuracy without competitive pressure.
+                    </p>
+<div class="mt-auto flex items-center justify-between">
+<div class="flex gap-2">
+<span class="px-3 py-1 rounded-full bg-surface-container-highest border border-outline-variant/20 text-xs text-on-surface-variant uppercase tracking-tighter">Solo</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-highest border border-outline-variant/20 text-xs text-on-surface-variant uppercase tracking-tighter">Unlimited</span>
+</div>
+<button class="group/btn flex items-center gap-3 py-3 px-8 bg-surface-container-highest border border-secondary/20 rounded-lg hover:bg-secondary hover:text-black transition-all font-bold tracking-widest text-sm uppercase active:scale-95 shadow-lg group-hover:shadow-secondary/20">
+                            ENTER RANGE
+                            <span class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Background visual element -->
+<div class="absolute -bottom-10 -right-10 w-40 h-40 bg-secondary/10 blur-[80px] rounded-full"></div>
+</div>
+<!-- BATTLE ARENA -->
+<div class="group relative bg-slate-950/40 glass-card rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 border border-white/5 border-beam">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="p-10 flex flex-col h-full relative z-10">
+<div class="flex justify-between items-start mb-12">
+<div class="w-16 h-16 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary shadow-[0_0_20px_rgba(222,142,255,0.15)]">
+<span class="material-symbols-outlined text-4xl" data-icon="swords">swords</span>
+</div>
+<div class="flex flex-col items-end">
+<div class="flex items-center gap-2 mb-1">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span class="text-label-sm text-tertiary uppercase tracking-widest">Live Now</span>
+</div>
+<div class="text-4xl font-headline font-bold text-primary">2,481 <span class="text-lg font-light text-on-surface-variant">Active</span></div>
+</div>
+</div>
+<h2 class="text-4xl font-headline font-bold text-on-surface mb-4">BATTLE ARENA</h2>
+<p class="text-on-surface-variant text-lg leading-relaxed mb-8">
+                        Engage in <span class="text-primary">High-Stakes Racing</span>. Face off against global contenders in real-time ranked matches and climb the leaderboard.
+                    </p>
+<div class="mt-auto flex items-center justify-between">
+<div class="flex gap-2">
+<span class="px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-xs text-primary-fixed-dim uppercase tracking-tighter">Competitive</span>
+<span class="px-3 py-1 rounded-full bg-surface-container-highest border border-outline-variant/20 text-xs text-on-surface-variant uppercase tracking-tighter">Ranked</span>
+</div>
+<button class="group/btn flex items-center gap-3 py-3 px-8 bg-gradient-to-r from-primary to-primary-dim rounded-lg hover:shadow-[0_0_30px_rgba(222,142,255,0.4)] transition-all font-extrabold tracking-widest text-sm uppercase text-on-primary-container active:scale-95">
+                            FIND MATCH
+                            <span class="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform" data-icon="bolt" data-weight="fill" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</button>
+</div>
+</div>
+<!-- Background visual element -->
+<div class="absolute -bottom-10 -right-10 w-40 h-40 bg-primary/20 blur-[80px] rounded-full"></div>
+</div>
+</div>
+<!-- Decorative Velocity Lines (Lower Z-index than cards) -->
+<div class="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
+<div class="absolute h-px w-screen bg-gradient-to-r from-transparent via-primary/40 to-transparent top-1/4 -left-1/4 rotate-12 blur-[1px]"></div>
+<div class="absolute h-px w-screen bg-gradient-to-r from-transparent via-secondary/40 to-transparent top-2/3 -right-1/4 -rotate-12 blur-[1px]"></div>
+<div class="absolute h-px w-screen bg-gradient-to-r from-transparent via-white/20 to-transparent top-1/2 left-0 rotate-45 blur-[2px]"></div>
+</div>
+<!-- Bottom Status Bar -->
+<div class="fixed bottom-8 right-8 flex gap-6 items-center bg-surface-container-low/80 backdrop-blur-md px-6 py-3 rounded-full border border-outline-variant/10">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+<span class="text-xs font-mono text-on-surface-variant">SERVER: US-EAST-1</span>
+</div>
+<div class="h-4 w-px bg-outline-variant/30"></div>
+<div class="flex items-center gap-3">
+<span class="text-xs font-mono text-on-surface-variant">LATENCY: 14ms</span>
+</div>
+<div class="h-4 w-px bg-outline-variant/30"></div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-xs text-secondary" data-icon="wifi">wifi</span>
+<span class="text-xs font-mono text-on-surface-variant uppercase">Connected</span>
+</div>
+</div>
+</main>
+</body></html>

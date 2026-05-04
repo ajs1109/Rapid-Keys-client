@@ -1,12 +1,10 @@
-import useStore from '@/store/useGameStore';
-import { AuthResponse, User } from '@/types/auth';
+import { AuthResponse, FriendUser, User } from '@/types/auth';
 import { EditUser } from '@/types/edit';
 import { apiService } from '@/utils/apiService';
 
 export const login = async (email: string, password: string): Promise<AuthResponse> => {
   try {
     const data = await apiService.post<AuthResponse>('/auth/login', { email, password });
-    console.log('login response:', data);
     return data;
   } catch (error) {
     throw error;
@@ -138,3 +136,30 @@ export const checkEmailAvailability = async(email: string): Promise<{message: st
     throw error;
   }
 }
+
+// ── Rank ──────────────────────────────────────────────────────────────────────
+export const getMyRank = async (): Promise<{ rank: number; total: number }> => {
+  const data = await apiService.get<{ rank: number; total: number }>('/game/rank');
+  return data;
+};
+
+// ── Friends ───────────────────────────────────────────────────────────────────
+export const getFriendsAndRequests = async (): Promise<{ friends: FriendUser[]; requests: FriendUser[] }> => {
+  const data = await apiService.get<{ friends: FriendUser[]; requests: FriendUser[] }>('/friends');
+  return data;
+};
+
+export const sendFriendRequest = async (targetUsername: string): Promise<{ message: string; targetId?: string }> => {
+  const data = await apiService.post<{ message: string; targetId?: string }>('/friends', { targetUsername });
+  return data;
+};
+
+export const respondToFriendRequest = async (fromUserId: string, action: 'accept' | 'decline'): Promise<{ message: string }> => {
+  const data = await apiService.put<{ message: string }>('/friends/respond', { fromUserId, action });
+  return data;
+};
+
+export const removeFriend = async (friendId: string): Promise<{ message: string }> => {
+  const data = await apiService.post<{ message: string }>('/friends/remove', { friendId });
+  return data;
+};

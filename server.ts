@@ -2,8 +2,8 @@
 import { createServer } from "node:http";
 import next from "next";
 import { Server } from "socket.io";
-import GameServer from "@/socket/game.js";
-import { HOST_NAME, NODE_ENV, PORT } from "@/config";
+import GameServer from "./src/socket/game.js";
+import { HOST_NAME, NODE_ENV, PORT } from "./src/config.js";
 
 const dev = NODE_ENV !== "production";
 const hostname = HOST_NAME || "localhost";

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
-    "dev:socket": "node --loader ts-node/esm server.ts",
+    "dev:socket": "tsx server.ts",
+    "dev:socket:clean": "rm -rf .next && tsx server.ts",
     "socketdev": "tsnd --respawn --pretty --transpile-only --ignore-watch=\".next\" server.ts",
     "dev:server": "ts-node server.ts",
     "newsoc": "tsx server.ts",

@@ -29,7 +29,17 @@ export default async function RootLayout({
         <meta name="user-data" content="" />
       </head>
       <body className="antialiased">
-        <Toaster position="top-right"/>
+        <Toaster
+          position="top-right"
+          theme="dark"
+          toastOptions={{
+            style: {
+              background: '#1a1d27',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: '#e2e8f0',
+            },
+          }}
+        />
           {children}
       </body>
     </html>

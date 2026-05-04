@@ -4,7 +4,7 @@ export const getAccessToken = () => {
   const cookieString = document.cookie;
   const cookies = cookieString.split(";");
 
-  for (let cookie of cookies) {
+  for (const cookie of cookies) {
     const [name, value] = cookie.trim().split("=");
     if (name === "access_token") {
       return value;

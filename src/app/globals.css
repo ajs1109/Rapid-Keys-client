@@ -1,83 +1,170 @@
+/* ─── Google Fonts ────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
+/* ─── Base ────────────────────────────────────────────────────────────────── */
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 220.9 39.3% 11%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+  html {
+    color-scheme: dark;
   }
-  .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 210 20% 98%;
-    --primary-foreground: 220.9 39.3% 11%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 216 12.2% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
-}
-
-@layer base {
   * {
-    @apply border-border;
+    @apply border-outline-variant;
+    box-sizing: border-box;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-on-surface font-body antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+  /* Respect design system: no pure white */
+  ::selection {
+    background: rgba(222, 142, 255, 0.3);
+    color: #ecedf6;
+  }
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0b0e14; }
+  ::-webkit-scrollbar-thumb { background: #45484f; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+}
+
+/* ─── Component utilities ────────────────────────────────────────────────── */
+@layer components {
+
+  /* Glass panel — the primary container surface */
+  .glass-panel {
+    @apply bg-surface-variant/60 backdrop-blur-xl border border-white/5 rounded-xl;
+  }
+
+  /* Elevated glass — floating modals / overlays */
+  .glass-modal {
+    @apply bg-surface-container/90 backdrop-blur-2xl border border-white/10 rounded-2xl;
+  }
+
+  /* Typing lane focus container */
+  .mono-focus {
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.025em;
+    line-height: 1.8;
+  }
+
+  /* Blinking caret */
+  .caret-custom {
+    display: inline-block;
+    width: 2px;
+    height: 1.1em;
+    background: #00eefc;
+    border-radius: 1px;
+    vertical-align: text-bottom;
+    animation: caret-blink 1s step-end infinite;
+    box-shadow: 0 0 8px rgba(0, 238, 252, 0.6);
+  }
+
+  /* Shiny button shimmer mask */
+  .shiny-btn-mask {
+    position: relative;
+    overflow: hidden;
+  }
+  .shiny-btn-mask::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(255,255,255,0.08) 50%,
+      transparent 60%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+  }
+
+  /* Bento grid baseline */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.5rem;
+  }
+
+  /* Particle background noise */
+  .particle-bg {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 128px 128px;
+    pointer-events: none;
+  }
+
+  /* Stat label text */
+  .stat-label {
+    @apply text-on-surface-variant text-[10px] uppercase tracking-[0.2em] font-body font-semibold;
+  }
+
+  /* Race track line */
+  .track-line {
+    @apply absolute inset-y-0 left-0 w-full self-center;
+    height: 2px;
+    background: rgba(255,255,255,0.04);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Nav active glow border */
+  .nav-active {
+    @apply text-secondary border-r-4 border-secondary bg-secondary/10;
+  }
+
+  /* Spinning conic-gradient border for featured cards */
+  .border-beam {
+    @apply border border-white/5;
+    position: relative;
+  }
+  .border-beam::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: conic-gradient(from 0deg, transparent, #de8eff, transparent 25%);
+    border-radius: inherit;
+    z-index: -1;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    pointer-events: none;
   }
 }
 
-
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+/* ─── Keyframe animations ─────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
 }
+
+@keyframes caret-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 12px rgba(0,238,252,0.2); }
+  50%       { box-shadow: 0 0 24px rgba(0,238,252,0.5); }
+}
+
+@keyframes spring-fill {
+  0%   { transform: scaleX(var(--from-scale, 0)); }
+  70%  { transform: scaleX(calc(var(--to-scale, 1) * 1.03)); }
+  100% { transform: scaleX(var(--to-scale, 1)); }
+}
+
+@keyframes count-in {
+  0%   { transform: scale(2); opacity: 0; }
+  50%  { opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-count-in {
+  animation: count-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+

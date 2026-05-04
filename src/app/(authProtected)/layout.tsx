@@ -35,13 +35,6 @@ export default async function RootLayout({
     }
   }
   return (
-    <html lang="en">
-      <head>
-        <meta name="user-data" content="" />
-      </head>
-      <body className="antialiased">
-        <AuthLayout children={children} user={user}/>
-      </body>
-    </html>
+    <AuthLayout user={user}>{children}</AuthLayout>
   );
 }

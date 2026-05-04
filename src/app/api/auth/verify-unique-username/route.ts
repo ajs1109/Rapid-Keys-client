@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({ message: "Username is available", available: true }, { status: 200 });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ message: "Internal Server Error", available: false }, { status: 500 });
     }
 }

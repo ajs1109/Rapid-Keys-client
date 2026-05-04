@@ -7,6 +7,11 @@ export interface User {
   highestAccuracy: number;
 }
 
+export interface FriendUser {
+  id: string;
+  username: string;
+}
+
 export interface AuthResponse {
   user: User;
   token: string;

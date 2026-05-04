@@ -1,9 +1,10 @@
 'use client'
 
-import { GalleryVerticalEnd, Keyboard } from "lucide-react"
+import { Keyboard } from "lucide-react"
+import Image from "next/image"
 
 import { LoginForm } from "@/components/login-form"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button";
 import CustomToast from "@/components/ui/CustomToast";
 
@@ -36,15 +37,16 @@ export default function LoginPage() {
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
             <LoginForm />
-            <Button disabled = {showErrorToast}g onClick={handleShowErrorToast}>Show error toast</Button>
+            <Button disabled={showErrorToast} onClick={handleShowErrorToast}>Show error toast</Button>
             <button onClick={handleShowSuccessToast}>Show success toast</button>
           </div>
         </div>
       </div>
       <div className="relative hidden bg-muted lg:block">
-        <img
+        <Image
           src="/placeholder.svg"
           alt="Image"
+          fill
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />
       </div>

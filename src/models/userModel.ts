@@ -9,6 +9,8 @@ export interface IUser extends Document {
   highestWPM: number;
   highestAccuracy: number;
   gamesPlayed: number;
+  friends: mongoose.Types.ObjectId[];
+  friendRequests: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,7 +22,9 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: [true, "Please provide a password"] },
   highestWPM: { type: Number, default: 0 },
   gamesPlayed: { type: Number, default: 0 },
-  highestAccuracy: { type: Number, default: 0 }
+  highestAccuracy: { type: Number, default: 0 },
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
+  friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
 }, { timestamps: true });
 
 // Add pre-save middleware
@@ -32,5 +36,11 @@ userSchema.pre('save', async function(this: IUser, next) {
 });
 
 // Create and export the model
-const UserModel = mongoose.models.User || mongoose.model<IUser>('User', userSchema);
+// Deleting the cached model forces Mongoose to recompile with the current schema.
+// In Next.js dev, hot-reload keeps the mongoose global alive between module
+// re-evaluations, so mongoose.models.User may reference an older schema.
+if (mongoose.models['User']) {
+  delete mongoose.models['User'];
+}
+const UserModel = mongoose.model<IUser>('User', userSchema);
 export default UserModel;
