@@ -1,5 +1,4 @@
 import { dbConfig } from "@/dbConfig/dbConfig";
-import UserModel from "@/models/userModel";
 import { getUserFromToken } from "@/utils/auth";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
@@ -14,7 +13,6 @@ export async function PUT(req: NextRequest) {
     if (!user) {
         return NextResponse.json({ message, success: false }, { status });
     }
-    console.log('user found:', user);
     try {
         if (username) {
             user.username = username;
@@ -30,8 +28,20 @@ export async function PUT(req: NextRequest) {
             user.password = newPassword;
         }
         await user.save();
-        return NextResponse.json({ message: "User updated", success: true }, { status: 200 });
-    } catch (error:any) {
-        return NextResponse.json({ message: "Internal Server Error: " + error, success: false }, { status: 500 });
+        return NextResponse.json({
+            message: "User updated",
+            success: true,
+            user: {
+                id: String(user._id),
+                username: user.username,
+                email: user.email,
+                gamesPlayed: user.gamesPlayed,
+                highestWPM: user.highestWPM,
+                highestAccuracy: user.highestAccuracy,
+            },
+        }, { status: 200 });
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        return NextResponse.json({ message: "Internal Server Error: " + errorMessage, success: false }, { status: 500 });
     }
 }

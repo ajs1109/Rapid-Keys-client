@@ -75,7 +75,9 @@ export const createGameStore = (preloadedState: Partial<GameStore> = {}) => {
         setHighScore: (WPM, Accuracy) => set({highestWPM: WPM, highestAccuracy: Accuracy}),
 
         logout: async () => {
-          document.cookie = "access_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+          await fetch('/api/auth/logout', { method: 'POST' });
+          set(initialState);
+          window.location.href = '/auth';
         },
 
         reset: () => set(initialState),

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rapid Keys - Multiplayer Battle Arena</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface": "#ecedf6",
+                      "primary-container": "#d779ff",
+                      "surface-container-lowest": "#000000",
+                      "surface-container-low": "#10131a",
+                      "primary-dim": "#ba00fe",
+                      "on-tertiary-fixed-variant": "#006a34",
+                      "surface-tint": "#de8eff",
+                      "on-secondary-container": "#e3fdff",
+                      "secondary-container": "#006970",
+                      "background": "#0b0e14",
+                      "on-secondary-fixed": "#003f43",
+                      "tertiary-fixed": "#6dfe9c",
+                      "primary-fixed-dim": "#cf62ff",
+                      "on-primary-fixed-variant": "#4b0069",
+                      "error-container": "#a70138",
+                      "surface": "#0b0e14",
+                      "on-primary-fixed": "#000000",
+                      "surface-variant": "#22262f",
+                      "on-primary-container": "#3d0056",
+                      "secondary": "#00eefc",
+                      "on-background": "#ecedf6",
+                      "outline-variant": "#45484f",
+                      "surface-container-high": "#1c2028",
+                      "on-error-container": "#ffb2b9",
+                      "on-primary": "#4f006e",
+                      "inverse-primary": "#9900d1",
+                      "primary-fixed": "#d779ff",
+                      "error": "#ff6e84",
+                      "secondary-fixed": "#00eefc",
+                      "tertiary-fixed-dim": "#5def8f",
+                      "tertiary": "#c4ffcd",
+                      "on-tertiary-fixed": "#004a22",
+                      "error-dim": "#d73357",
+                      "inverse-on-surface": "#52555c",
+                      "tertiary-container": "#6dfe9c",
+                      "secondary-dim": "#00deec",
+                      "outline": "#73757d",
+                      "on-tertiary-container": "#005f2e",
+                      "on-secondary": "#005359",
+                      "on-tertiary": "#006833",
+                      "tertiary-dim": "#5def8f",
+                      "surface-container-highest": "#22262f",
+                      "surface-dim": "#0b0e14",
+                      "on-surface-variant": "#a9abb3",
+                      "inverse-surface": "#f9f9ff",
+                      "primary": "#de8eff",
+                      "secondary-fixed-dim": "#00deec",
+                      "on-error": "#490013",
+                      "on-secondary-fixed-variant": "#005e64",
+                      "surface-bright": "#282c36",
+                      "surface-container": "#161a21"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "fontFamily": {
+                      "headline": ["Space Grotesk"],
+                      "body": ["Inter"],
+                      "label": ["Inter"],
+                      "mono": ["JetBrains Mono"]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .typing-lane {
+            line-height: 1.8;
+            letter-spacing: 0.05em;
+        }
+        .caret-custom {
+            width: 2px;
+            height: 1.4em;
+            background-color: #00eefc;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: -1px;
+        }
+        .particle-bg {
+            background-image: radial-gradient(circle at 2px 2px, rgba(222, 142, 255, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+      </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30 antialiased overflow-hidden">
+<!-- Global Background Particle Effect -->
+<div class="fixed inset-0 particle-bg pointer-events-none"></div>
+<div class="fixed inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-secondary/5 pointer-events-none"></div>
+<!-- Top Navigation (Shared Component Identity) -->
+<nav class="fixed top-0 w-full z-50 bg-slate-950/60 backdrop-blur-xl font-['Space_Grotesk'] tracking-tight shadow-[0_8px_32px_rgba(0,0,0,0.37)] flex items-center justify-between px-8 py-4">
+<div class="text-2xl font-bold tracking-wider text-purple-500 italic">Rapid Keys</div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-purple-400 border-b-2 border-purple-500 pb-1" href="#">Battle</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Practice</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Leaderboard</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-slate-400 hover:bg-white/5 transition-all p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-slate-400 hover:bg-white/5 transition-all p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="h-10 w-10 rounded-full bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center overflow-hidden">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="Professional portrait of a male cyber athlete with neon rim lighting in a dark room" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJgVs4cUj81TgPY-oPiafvy_fiHwyw-l1YioCIWtF4xOjkKngNxz_SLEjYHvEl9yuFF1_Q1IF0uYb4ALT3661kKr3bzNF58SbC2EL-WYKqphiRKO2CwI3oikHBlfVfB205lBJuxznPDQNAANyjrFm8MCtqiEMYjRF1KTa9z4S0IjO7H1saGWPtmplqnN2mQqiocuReOtnhslU7lbjqftF7hyL-gGOK8yKBoiaIdA0aJFAwxgEU0X69kq_H7uaekoyrYCvixCp0-lc"/>
+</div>
+</div>
+</nav>
+<!-- Side Lobby (SideNavBar Shared Logic) -->
+<aside class="h-screen w-64 fixed left-0 top-0 pt-20 bg-slate-900/40 backdrop-blur-md shadow-2xl flex flex-col border-r border-white/5 z-40">
+<div class="px-6 py-4 flex items-center gap-3">
+<div class="h-10 w-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-cyan-400" data-icon="person">person</span>
+</div>
+<div>
+<div class="font-['Space_Grotesk'] font-medium text-cyan-400">Pro Typer</div>
+<div class="text-[10px] text-slate-500 uppercase tracking-widest">120 WPM Avg</div>
+</div>
+</div>
+<div class="flex-1 mt-4">
+<div class="bg-cyan-500/20 text-cyan-400 border-r-4 border-cyan-400 px-4 py-3 flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="public">public</span>
+<span class="font-['Space_Grotesk'] font-medium">Global Lobby</span>
+</div>
+<div class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-all">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-['Space_Grotesk'] font-medium">Friends</span>
+</div>
+<div class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-all">
+<span class="material-symbols-outlined" data-icon="forum">forum</span>
+<span class="font-['Space_Grotesk'] font-medium">Messages</span>
+</div>
+<div class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 transition-all">
+<span class="material-symbols-outlined" data-icon="emoji_events">emoji_events</span>
+<span class="font-['Space_Grotesk'] font-medium">Achievements</span>
+</div>
+</div>
+<div class="p-4">
+<button class="w-full py-3 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold rounded-lg active:scale-95 transition-transform">
+                Create Room
+            </button>
+</div>
+<div class="border-t border-white/5 py-4">
+<div class="text-slate-400 px-4 py-2 flex items-center gap-3 hover:text-cyan-300 transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-['Space_Grotesk'] font-medium text-sm">Support</span>
+</div>
+<div class="text-slate-400 px-4 py-2 flex items-center gap-3 hover:text-error transition-all cursor-pointer">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-['Space_Grotesk'] font-medium text-sm">Log Out</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 pt-24 px-8 pb-8 h-screen flex flex-col gap-6">
+<!-- Section 1: The Race Track -->
+<section class="bg-surface-container rounded-xl p-6 shadow-2xl relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 pointer-events-none"></div>
+<div class="relative z-10 flex flex-col gap-6">
+<!-- Track 1: Player (Self) -->
+<div class="relative flex items-center h-12">
+<div class="absolute inset-y-0 left-0 w-full h-[2px] bg-white/5 self-center"></div>
+<div class="absolute left-[65%] h-[2px] bg-gradient-to-l from-primary to-transparent w-[65%] self-center shadow-[0_0_15px_rgba(222,142,255,0.5)]"></div>
+<div class="absolute left-[65%] -translate-x-1/2 flex flex-col items-center gap-1">
+<div class="px-3 py-1 bg-primary text-on-primary text-[10px] font-bold rounded-full shadow-lg shadow-primary/20">YOU</div>
+<img alt="User Player" class="h-10 w-10 rounded-full border-2 border-primary object-cover" data-alt="Avatar of the user with vibrant purple neon glow effect" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgMRen76n0D0MISrGPzAiOoC1Vv0zanOhVEml5JMPTp7oh4lkRIA5EZM0UuwD5-VpHKtpHq1e6CAyuiKpQk8GYBWSKnPjJmoWeCuRHEE5NRlYrEYV1YU7SIfSSntWTRxh_Is9pBpjxldiQx9UaWwnqUftCLwV2UtRvepuEAbP8ZAlog6nPgkyaSX4n5D3Oo84cHsEj0EUSsxImryEzkrYoSmburWNao2v5SwRF-_d-YYsI42n4J8rCWV4Kau_le67lQl7UOaDf7E4"/>
+</div>
+<div class="absolute right-4 text-primary font-mono text-sm font-bold">65%</div>
+</div>
+<!-- Track 2: Opponent 1 -->
+<div class="relative flex items-center h-12">
+<div class="absolute inset-y-0 left-0 w-full h-[2px] bg-white/5 self-center"></div>
+<div class="absolute left-[42%] h-[2px] bg-gradient-to-l from-secondary to-transparent w-[42%] self-center shadow-[0_0_15px_rgba(0,238,252,0.3)]"></div>
+<div class="absolute left-[42%] -translate-x-1/2 flex flex-col items-center gap-1">
+<div class="px-2 py-0.5 bg-secondary/20 text-secondary text-[8px] font-bold rounded uppercase">Viper_99</div>
+<img alt="Opponent 1" class="h-8 w-8 rounded-full border border-secondary/50 object-cover" data-alt="Profile photo of a competitive gamer wearing a headset with blue neon lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlhky7q3Ax5KwLPVPvROXffNlUuuy4XbCCrAL7XvMGUIykmh-5Bdie6OemtIIMTD7GX6YDkcTwUYALJ1QZuNxdhAhLcM-PKs335TpzVCLgM-xMUoFrC7KcWtEwN7lCbwlFxmRYJ5ILBA7WXTll0szLWELZUuPJ3VlrB4UV_10cwsQK2G5atHDIDuUJx99MJjDBXrARVG5dfQ4QTp8C4jr7pCXsDoREzpJV-A8wwYxZsG1i14yIF8H8Zh_HgTlTzkhaXzkTaracoeU"/>
+</div>
+<div class="absolute right-4 text-secondary/70 font-mono text-sm">42%</div>
+</div>
+<!-- Track 3: Opponent 2 -->
+<div class="relative flex items-center h-12 opacity-70">
+<div class="absolute inset-y-0 left-0 w-full h-[2px] bg-white/5 self-center"></div>
+<div class="absolute left-[28%] h-[2px] bg-gradient-to-l from-on-surface-variant to-transparent w-[28%] self-center"></div>
+<div class="absolute left-[28%] -translate-x-1/2 flex flex-col items-center gap-1">
+<div class="px-2 py-0.5 bg-surface-variant text-on-surface-variant text-[8px] font-bold rounded uppercase">GhostKey</div>
+<img alt="Opponent 2" class="h-8 w-8 rounded-full border border-outline-variant object-cover" data-alt="Abstract minimalist avatar with cool grey tones and soft focus background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG6x0LCdGyQwaCheL3qgRtec2rrXfhXNG2vatZjWiRfckH9yqqXgT1guzwFNezOCKyQv98dw6uARAKT0DUt5SerCVUdRqc3p8UxGSxR7EVMo9-owNSQfzIrSuuDXBuBPCZ-ljPRibYKlsRL9ndfOSXpZ5u5y1XUzb8JrNOVvdid3zibZrjP-PYGzRUgt9cwmM9px26txekPvqHh4bhe-qc915ggU_VterKItfmQRILkxbouNnXEvvUseBTz2TpIFCFZNAja6UK7nI"/>
+</div>
+<div class="absolute right-4 text-on-surface-variant font-mono text-sm">28%</div>
+</div>
+</div>
+</section>
+<div class="flex-1 flex gap-6 min-h-0">
+<!-- Section 2: Main Typing Area -->
+<div class="flex-1 flex flex-col gap-6 min-w-0">
+<div class="flex-1 bg-surface-bright/40 backdrop-blur-xl rounded-2xl p-10 relative flex flex-col border border-white/5 shadow-inner">
+<div class="absolute top-0 right-0 p-4">
+<span class="material-symbols-outlined text-white/10 text-6xl select-none" data-icon="keyboard">keyboard</span>
+</div>
+<div class="typing-lane font-mono text-2xl text-on-surface-variant select-none">
+<span class="text-tertiary">In</span> <span class="text-tertiary">the</span> <span class="text-tertiary">hyper-competitive</span> <span class="text-tertiary">world</span> <span class="text-tertiary">of</span>
+<span class="bg-secondary/20 text-on-surface border-b-2 border-secondary px-1">digital</span>
+<span class="caret-custom"></span>
+<span>velocity, the only limit is the speed of your thought. Every stroke counts toward the ultimate glory. Precision meets rhythm in the void.</span>
+</div>
+<div class="mt-auto flex items-center justify-between">
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-surface-container-highest rounded-full text-xs font-mono text-secondary">ctrl + r to reset</span>
+</div>
+<div class="flex gap-4">
+<button class="flex items-center gap-2 px-6 py-3 bg-surface-container-highest hover:bg-surface-variant text-on-surface rounded-xl transition-all active:scale-95">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span>
+<span class="font-headline font-bold text-sm tracking-widest uppercase">Reset Race</span>
+</button>
+<button class="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-primary to-primary-dim text-on-primary-fixed font-headline font-extrabold rounded-xl shadow-lg shadow-primary/30 transition-all hover:brightness-110 active:scale-95">
+<span class="material-symbols-outlined" data-icon="bolt" data-weight="fill">bolt</span>
+<span class="tracking-tighter uppercase">Nitro Boost</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Section 3: Stats Dashboard -->
+<div class="grid grid-cols-3 gap-6">
+<!-- Stat Card: Time -->
+<div class="bg-surface-container-high rounded-2xl p-6 flex items-center justify-between shadow-xl">
+<div>
+<div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Time Left</div>
+<div class="text-4xl font-headline font-bold text-error drop-shadow-[0_0_8px_rgba(255,110,132,0.4)]">00:42</div>
+</div>
+<div class="h-12 w-12 rounded-full bg-error/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-error" data-icon="timer">timer</span>
+</div>
+</div>
+<!-- Stat Card: WPM -->
+<div class="bg-surface-container-high rounded-2xl p-6 flex items-center justify-between shadow-xl border-b-4 border-secondary/20">
+<div>
+<div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Current WPM</div>
+<div class="flex items-baseline gap-2">
+<div class="text-4xl font-headline font-bold text-secondary">142</div>
+<div class="text-sm font-bold text-tertiary">↑ 12</div>
+</div>
+</div>
+<div class="w-20 h-10 flex items-end gap-1">
+<div class="flex-1 bg-secondary/10 h-[40%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/20 h-[60%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/30 h-[50%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/40 h-[80%] rounded-t-sm"></div>
+<div class="flex-1 bg-secondary/60 h-[90%] rounded-t-sm"></div>
+</div>
+</div>
+<!-- Stat Card: Accuracy -->
+<div class="bg-surface-container-high rounded-2xl p-6 flex items-center justify-between shadow-xl border-b-4 border-tertiary/20">
+<div>
+<div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Accuracy</div>
+<div class="text-4xl font-headline font-bold text-tertiary">98.4%</div>
+</div>
+<div class="relative h-14 w-14 flex items-center justify-center">
+<svg class="h-full w-full -rotate-90">
+<circle class="text-white/5" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" stroke-width="4"></circle>
+<circle class="text-tertiary" cx="28" cy="28" fill="transparent" r="24" stroke="currentColor" stroke-dasharray="150.7" stroke-dashoffset="2.4" stroke-width="4"></circle>
+</svg>
+<span class="absolute text-[10px] font-bold text-tertiary">PERFECT</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 4: Chat Drawer -->
+<aside class="w-80 bg-surface-container rounded-2xl flex flex-col shadow-2xl border border-white/5">
+<div class="p-4 border-b border-white/5 flex items-center justify-between bg-surface-container-high rounded-t-2xl">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-headline font-bold text-sm tracking-widest uppercase">Arena Chat</span>
+</div>
+<span class="h-2 w-2 rounded-full bg-tertiary animate-pulse"></span>
+</div>
+<div class="flex-1 p-4 overflow-y-auto flex flex-col gap-4">
+<!-- Message 1 -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-bold text-secondary uppercase">Viper_99</span>
+<span class="text-[9px] text-on-surface-variant">12:04</span>
+</div>
+<div class="bg-surface-container-highest p-3 rounded-xl rounded-tl-none text-sm border border-white/5">
+                            Too slow for this lobby! 🏎️
+                        </div>
+</div>
+<!-- Message 2 -->
+<div class="flex flex-col gap-1 items-end">
+<div class="flex items-center gap-2">
+<span class="text-[9px] text-on-surface-variant">12:05</span>
+<span class="text-[10px] font-bold text-primary uppercase">YOU</span>
+</div>
+<div class="bg-primary/10 p-3 rounded-xl rounded-tr-none text-sm border border-primary/20 text-primary-fixed">
+                            Wait for the nitro... 🚀
+                        </div>
+</div>
+<!-- Message 3 -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">GhostKey</span>
+<span class="text-[9px] text-on-surface-variant">12:05</span>
+</div>
+<div class="bg-surface-container-highest p-3 rounded-xl rounded-tl-none text-sm border border-white/5">
+                            My keyboard is literally smoking right now.
+                        </div>
+</div>
+</div>
+<div class="p-4 bg-surface-container-low rounded-b-2xl">
+<div class="relative">
+<input class="w-full bg-background border-none rounded-xl py-3 pl-4 pr-12 text-sm focus:ring-1 focus:ring-secondary/50 placeholder:text-on-surface-variant/50" placeholder="Type a message..." type="text"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-secondary hover:text-secondary-fixed transition-colors">
+<span class="material-symbols-outlined" data-icon="send" data-weight="fill">send</span>
+</button>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<!-- Floating Action for Match Status -->
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+<div class="bg-slate-900/80 backdrop-blur-md px-6 py-2 rounded-full border border-white/10 flex items-center gap-4 shadow-2xl">
+<div class="flex -space-x-2">
+<img alt="Player 1" class="h-6 w-6 rounded-full border border-primary bg-black" data-alt="Small round user avatar with neon purple border" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARfGTvaNwY3QKmmDBf2kZjrwm1dTvYpf11hWI9T4ZRTFWmUaPsbBpQLQQl1VpitQJI82Sc5zJmREWgJPihG3BEsCRwiTHxkxHypWENDJseNxKxu4b7mu4vkEqtZRbSt7YQp_w01wU8Xd72nZxwgM0L_-jAv10BjVJsVqevNZVHbepayOH1YAnbGbE90fYPCM3cgPpmNiCxY-L6-j5T_7A6TVQ3ApOTgIJO2bSYNjSp-ftA7x4BYXdkCsc9LkQyM4x5btuzby4IjBo"/>
+<img alt="Player 2" class="h-6 w-6 rounded-full border border-secondary bg-black" data-alt="Small round user avatar with cyan neon border" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClyO3OLGeauQvvA9N2WLiDPWxvHxXAAFBVmIwtQSngwRqZv7WteqlBLLM7GVzWOuVFnmqOyCrkXOQx3oy0MeD87gVQOs-1eI4C1qV83urmBkUCs5XhnkXnqLzJjE0A2aShJX6ma61pQheXUMyt2FgKJO_bw73WzkkDfQ3aTqDbXrNQKNd3atpUKmvBk7lTahJ9kP8tIBjKkdrqxZwjibKM5DOX2XlVZL2m5rx5slwMI6A95-zPwK3_5YNjFWV_LX856boaiH9u92w"/>
+<img alt="Player 3" class="h-6 w-6 rounded-full border border-outline-variant bg-black" data-alt="Small round user avatar with grey border" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6OlqMOhF36zeQ5PKqYSc-GYtmvf9wWy38uDCamm3OEuC_dhZi_y8jxvpFlxT0DG1jFDm0ByHl3pGHWVBfVlCAsWfSeYpb925I3SxGnddz9xI_pLyPQcmV-fujEK2UfhLnDwHqZkm39HPisTn66dl63J5wEwvZtKBYLGjkSeEENAt1-ICwUdJldWoQdZyJuVoWS7ay7793WZwpdfujCuqG_cgmsUTy-UV2sUZPDbrlZTCJ3OMjer5HUrUtHnv6Hygyv9T7DuMbS3g"/>
+</div>
+<div class="h-4 w-[1px] bg-white/10"></div>
+<div class="text-[10px] font-headline font-bold tracking-widest uppercase text-on-surface-variant flex items-center gap-2">
+                Match ID: <span class="text-secondary">#RK-99812</span>
+</div>
+</div>
+</div>
+</body></html>

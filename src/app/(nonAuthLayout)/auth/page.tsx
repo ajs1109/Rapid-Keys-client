@@ -1,17 +1,10 @@
 'use client'
 
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent } from 'react';
 import { signUp, login } from '@/lib/api';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, Keyboard } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import useGameStore from '@/store/useGameStore';
 import { useRouter } from 'next/navigation'
-import { errorToast, successToast } from '@/utils/customToast';
+import { errorToast } from '@/utils/customToast';
 
 type AuthEvent = FormEvent<HTMLFormElement> & {
   target: HTMLFormElement & {
@@ -72,94 +65,103 @@ const AuthForms = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-violet-500/10 to-purple-500/10">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Keyboard className="h-12 w-12 text-violet-500" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Rapid Keys</CardTitle>
-          <CardDescription>Improve your typing speed with friends</CardDescription>
-        </CardHeader>
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="login">
-            <CardContent>
-              <form onSubmit={handleLogin}>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email or Username</Label>
-                    <Input
-                      id="login-email"
-                      name="email"
-                      type="text"
-                      placeholder="Enter Email / Username"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <Input
-                      id="login-password"
-                      name="password"
-                      type="password"
-                      required
-                    />
-                  </div>
-                </div>
-                <CardFooter className="flex justify-end mt-4 px-0">
-                  <Button type="submit" className="bg-violet-500 hover:bg-violet-600">Login</Button>
-                </CardFooter>
-              </form>
-            </CardContent>
-          </TabsContent>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-hidden px-4">
+      {/* Ambient glow */}
+      <div className="particle-bg pointer-events-none" />
+      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute -bottom-32 left-1/4 w-[400px] h-[400px] bg-secondary/8 rounded-full blur-[120px] pointer-events-none" />
 
-          <TabsContent value="signup">
-            <CardContent>
-              <form onSubmit={handleSignup}>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-username">Username</Label>
-                    <Input
-                      id="signup-username"
-                      name="username"
-                      type="text"
-                      placeholder="speedtyper123"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      name="email"
-                      type="email"
-                      placeholder="john@example.com"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      name="password"
-                      type="password"
-                      required
-                    />
-                  </div>
-                </div>
-                <CardFooter className="flex justify-end mt-4 px-0">
-                  <Button type="submit" className="bg-violet-500 hover:bg-violet-600">Sign Up</Button>
-                </CardFooter>
-              </form>
-            </CardContent>
-          </TabsContent>
-        </Tabs>
-      </Card>
+      {/* Brand */}
+      <div className="mb-10 text-center">
+        <h1 className="text-5xl font-headline font-extrabold italic" style={{ color: '#de8eff', textShadow: '0 0 40px rgba(222,142,255,0.4)' }}>
+          Rapid Keys
+        </h1>
+        <p className="text-on-surface-variant mt-2 text-sm tracking-widest uppercase">Type faster. Race harder.</p>
+      </div>
+
+      <div className="glass-panel w-full max-w-md p-8">
+        {/* Tabs */}
+        <div className="flex border-b border-white/5 mb-8">
+          {(['login', 'signup'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => {
+                const tabs = document.querySelectorAll('[data-tab]');
+                tabs.forEach(el => (el as HTMLElement).style.display = 'none');
+                const target = document.getElementById(`tab-${tab}`);
+                if (target) target.style.display = 'block';
+                document.querySelectorAll('[data-tabtrigger]').forEach(el => {
+                  el.setAttribute('data-active', el.getAttribute('data-tabtrigger') === tab ? 'true' : 'false');
+                });
+              }}
+              data-tabtrigger={tab}
+              data-active={tab === 'login' ? 'true' : 'false'}
+              className="flex-1 pb-3 text-sm font-bold uppercase tracking-widest transition-all data-[active=true]:text-primary data-[active=true]:border-b-2 data-[active=true]:border-primary data-[active=false]:text-on-surface-variant"
+            >
+              {tab === 'login' ? 'Log In' : 'Sign Up'}
+            </button>
+          ))}
+        </div>
+
+        {/* Login tab */}
+        <div id="tab-login" data-tab>
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div>
+              <label className="stat-label block mb-2" htmlFor="login-email">Email or Username</label>
+              <input
+                id="login-email" name="email" type="text" placeholder="speed@racer.io" required
+                className="w-full bg-surface-container-highest text-on-surface rounded-lg px-4 py-3 text-sm outline-none border border-white/5 focus:ring-2 focus:ring-secondary/30 transition-all placeholder:text-on-surface-variant/40"
+              />
+            </div>
+            <div>
+              <label className="stat-label block mb-2" htmlFor="login-password">Password</label>
+              <input
+                id="login-password" name="password" type="password" required
+                className="w-full bg-surface-container-highest text-on-surface rounded-lg px-4 py-3 text-sm outline-none border border-white/5 focus:ring-2 focus:ring-secondary/30 transition-all"
+              />
+            </div>
+            <button
+              type="submit"
+              className="shiny-btn-mask w-full py-4 bg-gradient-to-r from-primary to-primary-dim text-on-primary-fixed rounded-xl font-headline font-bold shadow-glow-primary hover:brightness-110 active:scale-[0.98] transition-all mt-2"
+            >
+              Log In
+            </button>
+          </form>
+        </div>
+
+        {/* Signup tab */}
+        <div id="tab-signup" data-tab style={{ display: 'none' }}>
+          <form onSubmit={handleSignup} className="space-y-5">
+            <div>
+              <label className="stat-label block mb-2" htmlFor="signup-username">Username</label>
+              <input
+                id="signup-username" name="username" type="text" placeholder="speedtyper_x" required
+                className="w-full bg-surface-container-highest text-on-surface rounded-lg px-4 py-3 text-sm outline-none border border-white/5 focus:ring-2 focus:ring-secondary/30 transition-all placeholder:text-on-surface-variant/40"
+              />
+            </div>
+            <div>
+              <label className="stat-label block mb-2" htmlFor="signup-email">Email</label>
+              <input
+                id="signup-email" name="email" type="email" placeholder="you@example.com" required
+                className="w-full bg-surface-container-highest text-on-surface rounded-lg px-4 py-3 text-sm outline-none border border-white/5 focus:ring-2 focus:ring-secondary/30 transition-all placeholder:text-on-surface-variant/40"
+              />
+            </div>
+            <div>
+              <label className="stat-label block mb-2" htmlFor="signup-password">Password</label>
+              <input
+                id="signup-password" name="password" type="password" required
+                className="w-full bg-surface-container-highest text-on-surface rounded-lg px-4 py-3 text-sm outline-none border border-white/5 focus:ring-2 focus:ring-secondary/30 transition-all"
+              />
+            </div>
+            <button
+              type="submit"
+              className="shiny-btn-mask w-full py-4 bg-gradient-to-r from-secondary/20 to-secondary/10 border border-secondary/30 text-secondary rounded-xl font-headline font-bold hover:bg-secondary/20 active:scale-[0.98] transition-all mt-2"
+            >
+              Create Account
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };

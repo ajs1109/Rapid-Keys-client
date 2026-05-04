@@ -16,7 +16,6 @@ export default class GameServer {
 
   initialize() {
     this.io.on('connection', (socket) => {
-      console.log(`New connection: ${socket.id}`);
 
       // Authentication handler
       socket.on('authenticate', (data: { userId: string, username: string }) => {
@@ -62,6 +61,20 @@ export default class GameServer {
         );
       });
 
+      socket.on('resetRoom', (data: { roomId: string }) => {
+        this.handleResetRoom(socket, data.roomId);
+      });
+
+      // Direct message events
+      socket.on('sendDM', (data: { toUserId: string; message: string; timestamp: number }) => {
+        this.handleSendDM(socket, data);
+      });
+
+      // Friend request real-time notification (called by client after HTTP request succeeds)
+      socket.on('notifyFriendRequest', (data: { toUserId: string }) => {
+        this.handleNotifyFriendRequest(socket, data.toUserId);
+      });
+
       // Friend and invitation events
       socket.on('inviteFriend', (data: { 
         friendId: string, 
@@ -79,15 +92,12 @@ export default class GameServer {
   }
 
   private getOnlineFriendsForUser(userId: string) {
-    //const friends = this.friendsList.get(userId) || [];
-    console.log('connected users new:', [...this.connectedUsers.values()], userId);
     return [...this.connectedUsers.values()]
       .filter(user => user.userId !== userId);
   }
 
   private updateOnlineFriends(socket: Socket) {
     const currentUser = this.connectedUsers.get(socket.id);
-    console.log('current user:', currentUser);
     if (!currentUser) return;
   
     const onlineFriends = this.getOnlineFriendsForUser(currentUser.userId);
@@ -107,7 +117,6 @@ export default class GameServer {
       userId: data.userId,
       username: data.username
     });
-    console.log('user connected:', data.userId, data.username, this.rooms);
     socket.emit('availableRooms', [...this.rooms.values()].filter(room => !room.isPrivate))
   }
 
@@ -118,7 +127,10 @@ export default class GameServer {
       return;
     }
 
-    const roomId = Math.floor(Math.random() * 900000 + 100000).toString();
+    let roomId: string;
+    do {
+      roomId = Math.floor(Math.random() * 900000 + 100000).toString();
+    } while (this.rooms.has(roomId));
     const newRoom: Room = {
       id: roomId,
       players: [{
@@ -142,10 +154,7 @@ export default class GameServer {
     socket.emit('roomCreated', { roomId, newRoom });
 
     if (!isPrivate) {
-      console.log('room available:', newRoom);
-      this.io.emit('roomAvailable', 
-        newRoom
-      );
+      this.io.emit('roomAvailable', newRoom);
     }
   }
 
@@ -161,8 +170,6 @@ export default class GameServer {
       socket.emit('error', { message: 'Room not found' });
       return;
     }
-
-    console.log('room :', room)
 
     if (room.isGameInProgress) {
       socket.emit('error', { message: 'Game is already in progress' });
@@ -187,7 +194,6 @@ export default class GameServer {
 
     socket.join(roomId);
     socket.emit('roomJoined', { players: room.players });
-    console.log('player.joined.room:', roomId, room.players);
     socket.broadcast.to(roomId).emit('playerJoined', { players: room.players });
 
     if (!room.isPrivate) {
@@ -413,6 +419,34 @@ export default class GameServer {
     room.countdown = undefined;
   }
 
+  private handleResetRoom(socket: Socket, roomId: string) {
+    const user = this.connectedUsers.get(socket.id);
+    if (!user) return;
+
+    const room = this.rooms.get(roomId);
+    if (!room) return;
+
+    // Only a player inside the room can trigger a reset
+    if (!room.players.some(p => p.id === user.userId)) return;
+
+    // Reset all server-side room state
+    room.isGameInProgress = false;
+    room.gameText = undefined;
+    room.countdown = undefined;
+    room.results = [];
+    room.players.forEach(player => {
+      player.isReady = false;
+      player.progress = 0;
+      player.wpm = 0;
+      player.accuracy = 100;
+      player.finished = false;
+      player.position = undefined;
+    });
+
+    // Notify every player in the room
+    this.io.to(roomId).emit('roomReset');
+  }
+
   private handleInviteFriend(
     socket: Socket, 
     friendId: string, 
@@ -449,7 +483,14 @@ export default class GameServer {
     const user = this.connectedUsers.get(socket.id);
     if (!user) return;
 
-    // Find all rooms the user was in
+    // Delete this socket FIRST so the multi-tab check below is accurate
+    this.connectedUsers.delete(socket.id);
+
+    // Only broadcast 'userOffline' if the user has no other open sockets (tabs)
+    const stillOnline = [...this.connectedUsers.values()].some(u => u.userId === user.userId);
+    if (!stillOnline) {
+      socket.broadcast.emit('userOffline', { userId: user.userId });
+    }
     const userRooms = [...this.rooms.values()].filter(room => 
       room.players.some(p => p.id === user.userId)
     );
@@ -493,12 +534,37 @@ export default class GameServer {
       }
     });
 
-    // Notify others about disconnection
-    socket.broadcast.emit('userOffline', {
-      userId: user.userId
-    });
+  }
 
-    // Remove from connected users
-    this.connectedUsers.delete(socket.id);
+  private handleSendDM(
+    socket: Socket,
+    data: { toUserId: string; message: string; timestamp: number }
+  ) {
+    const sender = this.connectedUsers.get(socket.id);
+    if (!sender) return;
+    // Deliver to ALL sockets of the recipient so multiple tabs receive the message
+    const recipientSockets = [...this.connectedUsers.values()]
+      .filter(u => u.userId === data.toUserId);
+    for (const r of recipientSockets) {
+      this.io.to(r.socketId).emit('receiveDM', {
+        fromUserId: sender.userId,
+        fromUsername: sender.username,
+        message: data.message,
+        timestamp: data.timestamp,
+      });
+    }
+  }
+
+  private handleNotifyFriendRequest(socket: Socket, toUserId: string) {
+    const sender = this.connectedUsers.get(socket.id);
+    if (!sender) return;
+    const recipientSockets = [...this.connectedUsers.values()]
+      .filter(u => u.userId === toUserId);
+    for (const r of recipientSockets) {
+      this.io.to(r.socketId).emit('friendRequestReceived', {
+        userId: sender.userId,
+        username: sender.username,
+      });
+    }
   }
 }

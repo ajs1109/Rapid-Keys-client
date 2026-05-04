@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rapid Keys | User Profile &amp; Stats</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#ecedf6",
+                        "primary-container": "#d779ff",
+                        "surface-container-lowest": "#000000",
+                        "surface-container-low": "#10131a",
+                        "primary-dim": "#ba00fe",
+                        "on-tertiary-fixed-variant": "#006a34",
+                        "surface-tint": "#de8eff",
+                        "on-secondary-container": "#e3fdff",
+                        "secondary-container": "#006970",
+                        "background": "#0b0e14",
+                        "on-secondary-fixed": "#003f43",
+                        "tertiary-fixed": "#6dfe9c",
+                        "primary-fixed-dim": "#cf62ff",
+                        "on-primary-fixed-variant": "#4b0069",
+                        "error-container": "#a70138",
+                        "surface": "#0b0e14",
+                        "on-primary-fixed": "#000000",
+                        "surface-variant": "#22262f",
+                        "on-primary-container": "#3d0056",
+                        "secondary": "#00eefc",
+                        "on-background": "#ecedf6",
+                        "outline-variant": "#45484f",
+                        "surface-container-high": "#1c2028",
+                        "on-error-container": "#ffb2b9",
+                        "on-primary": "#4f006e",
+                        "inverse-primary": "#9900d1",
+                        "primary-fixed": "#d779ff",
+                        "error": "#ff6e84",
+                        "secondary-fixed": "#00eefc",
+                        "tertiary-fixed-dim": "#5def8f",
+                        "tertiary": "#c4ffcd",
+                        "on-tertiary-fixed": "#004a22",
+                        "error-dim": "#d73357",
+                        "inverse-on-surface": "#52555c",
+                        "tertiary-container": "#6dfe9c",
+                        "secondary-dim": "#00deec",
+                        "outline": "#73757d",
+                        "on-tertiary-container": "#005f2e",
+                        "on-secondary": "#005359",
+                        "on-tertiary": "#006833",
+                        "tertiary-dim": "#5def8f",
+                        "surface-container-highest": "#22262f",
+                        "surface-dim": "#0b0e14",
+                        "on-surface-variant": "#a9abb3",
+                        "inverse-surface": "#f9f9ff",
+                        "primary": "#de8eff",
+                        "secondary-fixed-dim": "#00deec",
+                        "on-error": "#490013",
+                        "on-secondary-fixed-variant": "#005e64",
+                        "surface-bright": "#282c36",
+                        "surface-container": "#161a21"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #0b0e14; color: #ecedf6; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-panel { backdrop-filter: blur(12px); }
+        .mono-stat { font-family: 'JetBrains Mono', monospace; }
+        .kinetic-glow:hover { box-shadow: 0 0 15px rgba(0, 238, 252, 0.2); }
+    </style>
+</head>
+<body class="selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-slate-950/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.37)] bg-gradient-to-b from-purple-500/10 to-transparent">
+<div class="flex items-center justify-between px-8 py-4 w-full">
+<div class="flex items-center gap-12">
+<div class="text-2xl font-bold tracking-wider text-purple-500 italic font-['Space_Grotesk']">Rapid Keys</div>
+<nav class="hidden md:flex gap-8 font-['Space_Grotesk'] tracking-tight">
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Battle</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Practice</a>
+<a class="text-slate-400 hover:text-slate-200 transition-colors" href="#">Leaderboard</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-400 hover:bg-white/5 p-2 rounded-full transition-all cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-slate-400 hover:bg-white/5 p-2 rounded-full transition-all cursor-pointer">settings</span>
+</div>
+<img alt="User profile avatar" class="w-10 h-10 rounded-full border-2 border-purple-500 active:scale-95 transition-transform cursor-pointer" data-alt="High-tech futuristic gamer avatar with neon purple highlights and a sleek helmet, professional esports aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdXEHHOTDaBkjQ4D-HvgK8aqznoDmbeMiVe11C1zaMwzAo6cvmbetaZ7eF56F5MNiUeiZhgxc85_m4IcVGLuZDpkCwqsT6Vm9TcpGsPVZj9sSu3wPt8NJ2XUt56OmjtWvItPlVIK-ca3eANjvQZ0pzNiDdyVJDf-ujSwVboeVpRltpd2VbtO4oms9FfQ1Uwl55UEPMbM-ljX0c5BSEN6Ya4f-rjnoKNcOsHY1wuEylyeYjKFw-RtljjqacsKuU416VPqpRiE56uas"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 pt-20 bg-slate-900/40 backdrop-blur-md shadow-2xl flex flex-col border-r border-white/5 font-['Space_Grotesk'] font-medium">
+<div class="p-6 border-b border-white/5 mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-cyan-500/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-cyan-400" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+<div>
+<div class="text-on-surface font-bold">Pro Typer</div>
+<div class="text-xs text-slate-500">120 WPM Avg</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 hover:text-cyan-300 transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined">public</span> Global Lobby
+            </a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 hover:text-cyan-300 transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined">group</span> Friends
+            </a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 hover:text-cyan-300 transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined">forum</span> Messages
+            </a>
+<a class="text-slate-400 px-4 py-3 flex items-center gap-3 hover:bg-white/5 hover:text-cyan-300 transition-all hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined">emoji_events</span> Achievements
+            </a>
+</nav>
+<div class="p-4 mt-auto space-y-4">
+<button class="w-full py-3 bg-cyan-500/10 text-cyan-400 border border-cyan-400/30 rounded font-bold hover:bg-cyan-500/20 transition-all">
+                Create Room
+            </button>
+<div class="pt-4 border-t border-white/5">
+<a class="text-slate-400 px-4 py-2 flex items-center gap-3 hover:text-cyan-300 transition-all text-sm" href="#">
+<span class="material-symbols-outlined text-sm">help</span> Support
+                </a>
+<a class="text-slate-400 px-4 py-2 flex items-center gap-3 hover:text-red-400 transition-all text-sm" href="#">
+<span class="material-symbols-outlined text-sm">logout</span> Log Out
+                </a>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="pl-64 pt-24 pb-12 min-h-screen bg-background">
+<div class="max-w-6xl mx-auto px-8 space-y-10">
+<!-- User Identity Section -->
+<section class="flex flex-col md:flex-row items-end gap-8 bg-surface-container rounded-xl p-8 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
+<div class="relative">
+<div class="w-32 h-32 rounded-xl overflow-hidden border-4 border-surface-container-highest shadow-2xl">
+<img alt="Pro Typer Avatar" class="w-full h-full object-cover" data-alt="Close up portrait of a digital athlete, cool blue and purple lighting, sharp focus on intense eyes, cyberpunk aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrAz4qR-l2XuwyNdSMSgh8Z8ZhPSuryOJ8npnYyKoKg6Znnxc2ROnKuLo_CzyYGi0J5B9Jhxuwc4QLBg4TIrDqCtr4KWQqdvTAFbYU4cLectyLvajRLr0B1Q--xP-HhF83QDQZcbv2nHdYFVVOQ4YZM3sYKJWZGamlUAOuS2xTu2Bsgi_2X4-qZqdanty-pv-KICGh1SGMdkqvZ3iHqyMjpa_nnvinmeO_MijiA20-OjYguoy9PUh9FhY4FTjr11mUFmCfZ-cPRu8"/>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-tertiary text-on-tertiary text-[10px] font-bold px-2 py-1 rounded shadow-lg">ONLINE</div>
+</div>
+<div class="flex-1 space-y-2">
+<div class="flex items-center gap-3">
+<h1 class="text-4xl font-headline font-bold tracking-tight text-on-surface">Pro Typer</h1>
+<span class="px-3 py-1 bg-primary-container text-on-primary-container text-xs font-bold rounded-full tracking-widest">GRANDMASTER</span>
+</div>
+<p class="text-on-surface-variant max-w-lg">Active since November 2023. Top 0.2% of global players. Specializes in technical documentation sprints.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-6 py-2 bg-surface-container-highest text-on-surface text-sm font-medium rounded border border-outline-variant/20 hover:bg-surface-bright transition-all active:scale-95">
+                        Change Password
+                    </button>
+<button class="px-6 py-2 bg-gradient-to-r from-primary to-primary-dim text-white text-sm font-bold rounded shadow-[0_0_20px_rgba(222,142,255,0.3)] hover:brightness-110 transition-all active:scale-95">
+                        Edit Profile
+                    </button>
+</div>
+</section>
+<!-- Lifetime Stats Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<!-- Stat 1: Games Played -->
+<div class="col-span-1 bg-surface-container-high p-6 rounded-xl border border-white/5 flex flex-col justify-between">
+<span class="text-label-sm text-on-surface-variant font-medium uppercase tracking-widest text-[10px]">Games Played</span>
+<div class="mt-4">
+<div class="text-4xl font-headline font-bold text-on-surface mono-stat">2,481</div>
+<div class="text-xs text-tertiary mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">trending_up</span> +12 this week
+                        </div>
+</div>
+</div>
+<!-- Stat 2: Avg WPM Gauge -->
+<div class="col-span-1 md:col-span-2 bg-surface-container-high p-6 rounded-xl border border-white/5 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-6xl text-secondary">speed</span>
+</div>
+<span class="text-label-sm text-on-surface-variant font-medium uppercase tracking-widest text-[10px]">Average Velocity</span>
+<div class="mt-4 flex items-end gap-4">
+<div class="text-6xl font-headline font-bold text-secondary mono-stat">120</div>
+<div class="mb-2">
+<div class="text-lg font-bold text-secondary/70">WPM</div>
+<div class="h-1.5 w-32 bg-surface-container-lowest rounded-full overflow-hidden mt-1">
+<div class="h-full bg-secondary w-[85%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Stat 3: Highest WPM -->
+<div class="col-span-1 bg-surface-container-high p-6 rounded-xl border border-white/5 flex flex-col justify-between border-l-4 border-l-primary/40 shadow-xl">
+<div class="flex justify-between items-start">
+<span class="text-label-sm text-on-surface-variant font-medium uppercase tracking-widest text-[10px]">Personal Best</span>
+<span class="material-symbols-outlined text-primary" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<div class="mt-4">
+<div class="text-4xl font-headline font-bold text-primary mono-stat">158</div>
+<div class="text-[10px] text-on-surface-variant mt-1">Achieved 2 days ago</div>
+</div>
+</div>
+<!-- Stat 4: Accuracy -->
+<div class="col-span-1 md:col-span-2 bg-surface-container-high p-6 rounded-xl border border-white/5 flex items-center justify-between">
+<div>
+<span class="text-label-sm text-on-surface-variant font-medium uppercase tracking-widest text-[10px]">Typing Precision</span>
+<div class="text-5xl font-headline font-bold text-tertiary mono-stat mt-2">98.4%</div>
+</div>
+<div class="w-20 h-20 rounded-full border-4 border-surface-container-lowest flex items-center justify-center relative">
+<svg class="absolute inset-0 -rotate-90" viewbox="0 0 36 36">
+<path class="text-tertiary/20" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"></path>
+<path class="text-tertiary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="98.4, 100" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<span class="material-symbols-outlined text-tertiary">verified_user</span>
+</div>
+</div>
+<!-- Stat 5: Global Rank -->
+<div class="col-span-1 md:col-span-2 bg-gradient-to-br from-surface-container-high to-surface-container-lowest p-6 rounded-xl border border-white/5">
+<span class="text-label-sm text-on-surface-variant font-medium uppercase tracking-widest text-[10px]">Global Leaderboard Rank</span>
+<div class="flex items-center gap-4 mt-2">
+<div class="text-4xl font-headline font-bold text-on-surface">#412</div>
+<div class="h-8 w-px bg-white/10"></div>
+<div class="text-sm text-on-surface-variant italic font-mono">"Pushing the limits of human dexterity"</div>
+</div>
+</div>
+</section>
+<!-- Recent Activity -->
+<section class="space-y-6">
+<div class="flex items-center justify-between">
+<h2 class="text-2xl font-headline font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">history</span>
+                        Recent Activity
+                    </h2>
+<a class="text-sm text-secondary hover:underline" href="#">View All Match History</a>
+</div>
+<div class="overflow-hidden rounded-xl bg-surface-container-low border border-white/5">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high text-on-surface-variant text-[10px] uppercase tracking-[0.2em] font-bold">
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4">Rank</th>
+<th class="px-6 py-4 text-right">WPM</th>
+<th class="px-6 py-4 text-right">Accuracy</th>
+<th class="px-6 py-4 text-right">Date</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5 font-mono text-sm">
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-6 py-4"><span class="w-2 h-2 rounded-full bg-tertiary inline-block mr-2"></span> Victory</td>
+<td class="px-6 py-4 text-on-surface">1st / 10</td>
+<td class="px-6 py-4 text-right text-secondary font-bold">142</td>
+<td class="px-6 py-4 text-right">99%</td>
+<td class="px-6 py-4 text-right text-on-surface-variant">2h ago</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4"><span class="w-2 h-2 rounded-full bg-slate-500 inline-block mr-2"></span> Finished</td>
+<td class="px-6 py-4 text-on-surface">3rd / 10</td>
+<td class="px-6 py-4 text-right text-secondary font-bold">118</td>
+<td class="px-6 py-4 text-right">97%</td>
+<td class="px-6 py-4 text-right text-on-surface-variant">4h ago</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-6 py-4"><span class="w-2 h-2 rounded-full bg-tertiary inline-block mr-2"></span> Victory</td>
+<td class="px-6 py-4 text-on-surface">1st / 12</td>
+<td class="px-6 py-4 text-right text-secondary font-bold">158</td>
+<td class="px-6 py-4 text-right text-tertiary">100%</td>
+<td class="px-6 py-4 text-right text-on-surface-variant">Yesterday</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4"><span class="w-2 h-2 rounded-full bg-slate-500 inline-block mr-2"></span> Finished</td>
+<td class="px-6 py-4 text-on-surface">2nd / 8</td>
+<td class="px-6 py-4 text-right text-secondary font-bold">124</td>
+<td class="px-6 py-4 text-right">98%</td>
+<td class="px-6 py-4 text-right text-on-surface-variant">Yesterday</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors">
+<td class="px-6 py-4"><span class="w-2 h-2 rounded-full bg-slate-500 inline-block mr-2"></span> Finished</td>
+<td class="px-6 py-4 text-on-surface">5th / 10</td>
+<td class="px-6 py-4 text-right text-secondary font-bold">102</td>
+<td class="px-6 py-4 text-right">94%</td>
+<td class="px-6 py-4 text-right text-on-surface-variant">2d ago</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Social & Privacy Section -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<section class="space-y-4">
+<h3 class="text-xl font-headline font-bold text-on-surface">Social Management</h3>
+<div class="bg-surface-container rounded-xl p-6 border border-white/5 space-y-4">
+<div class="flex items-center justify-between p-3 bg-surface-container-highest rounded border border-white/5">
+<div class="flex items-center gap-3">
+<img alt="Friend 1" class="w-10 h-10 rounded" data-alt="Cyberpunk character portrait with green neon glasses and short hair, cool futuristic style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC98uXkfQ8sOPfdF5wtnV81CmymMnG-BiVJQDFkFollB0uHV3r1ltii23BaNjDxrZNYo2IvLet2oZZvd1i7Nh2iwGpkre4I2_-tLqq07GeSN7sc0rTSs75_y9IgsicYPXJq1xwmHPbeWI5V3I8QEsR1J7dx6eHFV0oU4cBC4t4YIUvcZrcLtcXqZkvc128sC06GPHMTf2NwqCK1pr9PY5-7iviF3U7yLV2iX8YLD7Qy9nhl-36NgkN1GcE25a29yVUSma_ULdOSA7A"/>
+<div>
+<div class="text-sm font-bold">SpeedDemon_99</div>
+<div class="text-[10px] text-tertiary">In Game</div>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-white transition-colors">
+<span class="material-symbols-outlined">chat</span>
+</button>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container-highest rounded border border-white/5 opacity-60">
+<div class="flex items-center gap-3">
+<img alt="Friend 2" class="w-10 h-10 rounded" data-alt="Minimalist digital avatar of a player with sleek visor and orange glowing highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOBfNHMKt6iPNwx-NyuBl2_ccsTaczA5wG3akxurFdCkMr3rLwRr0VeLEe8VzHQScbodrxSPKHm-jT8an-ZHyOblA3uN7kjJ5JJvK5PrdBiaIRiFk6Ev73VbOGepFJ6JovHZgB_h_gIuu709yGSvc401S4q-1u1hOlYiMyWWzvSFu5dUJp3wcs_W2K73ru6h460-ioTvmXSyevJ7sSAqmRlU7tYGOgyIoQGnlCO506MYeNU5ijvMX1dBVVL2FY-DgX4kShodY_6ps"/>
+<div>
+<div class="text-sm font-bold">KeyMaster_X</div>
+<div class="text-[10px] text-on-surface-variant">Offline</div>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-white transition-colors">
+<span class="material-symbols-outlined">person_remove</span>
+</button>
+</div>
+<button class="w-full py-2 bg-surface-bright text-on-surface text-sm font-medium rounded hover:bg-white/10 transition-all">
+                            Manage Friends List
+                        </button>
+</div>
+</section>
+<section class="space-y-4">
+<h3 class="text-xl font-headline font-bold text-on-surface">Privacy Settings</h3>
+<div class="bg-surface-container rounded-xl p-6 border border-white/5 space-y-4">
+<div class="flex items-center justify-between">
+<span class="text-sm">Public Profile Stats</span>
+<div class="w-10 h-5 bg-tertiary rounded-full relative cursor-pointer">
+<div class="absolute right-1 top-1 w-3 h-3 bg-on-tertiary rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm">Allow Friend Requests</span>
+<div class="w-10 h-5 bg-tertiary rounded-full relative cursor-pointer">
+<div class="absolute right-1 top-1 w-3 h-3 bg-on-tertiary rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm">Show WPM on Global Leaderboard</span>
+<div class="w-10 h-5 bg-outline-variant rounded-full relative cursor-pointer">
+<div class="absolute left-1 top-1 w-3 h-3 bg-on-surface-variant rounded-full"></div>
+</div>
+</div>
+<div class="pt-2">
+<p class="text-[10px] text-on-surface-variant leading-relaxed">Changes to privacy settings may take up to 24 hours to reflect on the global API cache.</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Danger Zone -->
+<section class="mt-12 pt-12 border-t border-error/20">
+<div class="bg-error-container/10 border border-error-container p-6 rounded-xl flex items-center justify-between gap-6">
+<div>
+<h4 class="text-lg font-headline font-bold text-error">Danger Zone</h4>
+<p class="text-sm text-on-surface-variant">Permanently delete your entire racing history and reset stats. This action cannot be undone.</p>
+</div>
+<button class="whitespace-nowrap px-8 py-3 bg-error text-white font-bold rounded hover:bg-error-dim transition-all shadow-lg hover:shadow-error/20 active:scale-95">
+                        Clear All Scores
+                    </button>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer Decoration -->
+<footer class="pl-64 py-8 bg-surface-container-lowest text-center">
+<div class="text-[10px] text-on-surface-variant font-mono uppercase tracking-[0.3em]">
+            © 2024 Rapid Keys - Protocol High-Velocity
+        </div>
+</footer>
+</body></html>

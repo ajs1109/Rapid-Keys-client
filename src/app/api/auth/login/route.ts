@@ -11,8 +11,6 @@ export async function POST(request: NextRequest) {
         const reqBody = await request.json();
         const {email, password} = reqBody;
 
-        console.log('reqBody from login:', reqBody);
-
         let user = await UserModel.findOne({email});
         if(!user){
             user = await UserModel.findOne({username: email});
@@ -33,7 +31,13 @@ export async function POST(request: NextRequest) {
 
         const token = await jwt.sign({id: user._id}, JWT_SECRET, {expiresIn: "2days"});
 
-        response.cookies.set("access_token", token);
+        response.cookies.set("access_token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 2 * 24 * 60 * 60, // 2 days in seconds — must match JWT expiresIn
+            path: "/",
+        });
         
         return response;
     }
