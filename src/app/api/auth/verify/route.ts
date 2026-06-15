@@ -1,8 +1,6 @@
-import { dbConfig } from "@/dbConfig/dbConfig";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "@/utils/auth";
 
-dbConfig.connect();
 export async function POST(req: NextRequest) {
   const reqBody = await req.json();
   const token = reqBody?.token;
@@ -15,5 +13,5 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ message, success: false }, { status });
   }
-  return NextResponse.json({ user:{id: user._id as string, username: user.username, email: user.email, highestWPM: user.highestWPM, highestAccuracy: user.highestAccuracy, gamesPlayed: user.gamesPlayed } });
+  return NextResponse.json({ user:{id: user.id, username: user.username, email: user.email, highestWPM: user.highestWpm, highestAccuracy: user.highestAccuracy, gamesPlayed: user.gamesPlayed } });
 }

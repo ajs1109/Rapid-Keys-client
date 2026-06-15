@@ -1,8 +1,8 @@
-import { dbConfig } from "@/dbConfig/dbConfig";
-import UserModel from "@/models/userModel";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-dbConfig.connect();
 export async function POST(req: NextRequest) {
     const reqBody = await req.json();
     const { username } = reqBody;
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const user = await UserModel.findOne({ username });
+        const [user] = await db.select().from(users).where(eq(users.username, username));
         if (user) {
             return NextResponse.json({ message: "Username is already taken", available: false }, { status: 200 });
         }

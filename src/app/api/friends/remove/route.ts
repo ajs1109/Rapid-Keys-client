@@ -1,10 +1,8 @@
-import { dbConfig } from "@/dbConfig/dbConfig";
+import { db } from "@/db";
+import { friends } from "@/db/schema";
+import { eq, and, or } from "drizzle-orm";
 import { getUserFromToken } from "@/utils/auth";
-import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
-
-dbConfig.connect();
 
 // POST /api/friends/remove  { friendId }
 export async function POST(req: NextRequest) {
@@ -16,16 +14,14 @@ export async function POST(req: NextRequest) {
   const friendId: string = body.friendId;
   if (!friendId) return NextResponse.json({ message: 'friendId required' }, { status: 400 });
 
-  let friendOId: mongoose.Types.ObjectId;
-  try {
-    friendOId = new mongoose.Types.ObjectId(friendId);
-  } catch {
-    return NextResponse.json({ message: 'Invalid friendId' }, { status: 400 });
-  }
-
-  // Remove bidirectionally using $pull — atomic, no stale-schema issues
-  await UserModel.findByIdAndUpdate(user._id, { $pull: { friends: friendOId } });
-  await UserModel.findByIdAndUpdate(friendOId, { $pull: { friends: user._id } });
+  // Remove bidirectionally
+  await db.delete(friends)
+    .where(
+      or(
+        and(eq(friends.userId, user.id), eq(friends.friendId, friendId)),
+        and(eq(friends.userId, friendId), eq(friends.friendId, user.id))
+      )
+    );
 
   return NextResponse.json({ message: 'Friend removed' });
 }

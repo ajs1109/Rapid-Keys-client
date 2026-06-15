@@ -1,10 +1,8 @@
-import { dbConfig } from "@/dbConfig/dbConfig";
+import { db } from "@/db";
+import { friends, friendRequests } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 import { getUserFromToken } from "@/utils/auth";
-import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
-
-dbConfig.connect();
 
 // PUT /api/friends/respond — accept or decline a friend request
 // Body: { fromUserId: string, action: 'accept' | 'decline' }
@@ -21,31 +19,34 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ message: 'Invalid request' }, { status: 400 });
   }
 
-  let fromOId: mongoose.Types.ObjectId;
-  try {
-    fromOId = new mongoose.Types.ObjectId(fromUserId);
-  } catch {
-    return NextResponse.json({ message: 'Invalid user ID' }, { status: 400 });
-  }
-
   // Remove from current user's friendRequests
-  user.friendRequests = user.friendRequests.filter((id: mongoose.Types.ObjectId) => !id.equals(fromOId)) as typeof user.friendRequests;
+  await db.delete(friendRequests)
+    .where(
+      and(
+        eq(friendRequests.senderId, fromUserId),
+        eq(friendRequests.receiverId, user.id)
+      )
+    );
 
   if (action === 'accept') {
-    if (!user.friends.some((id: mongoose.Types.ObjectId) => id.equals(fromOId))) {
-      user.friends.push(fromOId);
-    }
-    await user.save();
-
-    // Add reciprocal friendship
-    const requester = await UserModel.findById(fromOId);
-    if (requester && !requester.friends.some((id: mongoose.Types.ObjectId) => id.equals(user._id))) {
-      requester.friends.push(user._id);
-      await requester.save();
+    // Check if they are already friends
+    const [existingFriendship] = await db
+      .select()
+      .from(friends)
+      .where(
+        and(
+          eq(friends.userId, user.id),
+          eq(friends.friendId, fromUserId)
+        )
+      );
+    if (!existingFriendship) {
+      await db.insert(friends).values([
+        { userId: user.id, friendId: fromUserId },
+        { userId: fromUserId, friendId: user.id }
+      ]);
     }
     return NextResponse.json({ message: 'Friend added!' });
   }
 
-  await user.save();
   return NextResponse.json({ message: 'Request declined' });
 }

@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { generateWords, updateScore } from '@/lib/api';
 import GlassPanel from '@/components/ui/GlassPanel';
 import ShinyButton from '@/components/ui/ShinyButton';
-import BentoStatCard from '@/components/ui/BentoStatCard';
 
 const SAMPLE_TEXT = `Technology continues to transform the way we live and work in unprecedented ways. As artificial intelligence becomes more sophisticated, it opens up new possibilities for innovation and efficiency. However, we must carefully consider the ethical implications of these advances. The rapid pace of digital transformation requires us to adapt quickly while maintaining our human connections. Despite the challenges, this era of technological revolution presents exciting opportunities for those who are willing to embrace change and learn continuously.`;
 const GAME_TIME = 60;

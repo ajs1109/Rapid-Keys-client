@@ -1,9 +1,8 @@
-import { dbConfig } from "@/dbConfig/dbConfig";
-import UserModel from "@/models/userModel";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-
-dbConfig.connect();
 export async function POST(req: NextRequest) {
   
   const reqBody = await req.json();
@@ -13,14 +12,20 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const user = await UserModel.findById(userId);
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
     if (user) {
-      user.gamesPlayed = gamesPlayed;
-      if(user.highestWPM * user.highestAccuracy < wpm * accuracy || (user.highestWPM * user.highestAccuracy === wpm * accuracy && wpm > user.highestWPM)){
-        user.highestWPM = wpm;
-        user.highestAccuracy = accuracy;
+      const updateData: Partial<typeof users.$inferInsert> = { gamesPlayed };
+      
+      const currentScore = user.highestWpm * user.highestAccuracy;
+      const newScore = wpm * accuracy;
+      if (newScore > currentScore || (newScore === currentScore && wpm > user.highestWpm)) {
+        updateData.highestWpm = wpm;
+        updateData.highestAccuracy = accuracy;
       }
-      await user.save();
+      
+      await db.update(users)
+        .set(updateData)
+        .where(eq(users.id, userId));
       
       return NextResponse.json({ message: "Done", success: true }, { status: 200 });
     }

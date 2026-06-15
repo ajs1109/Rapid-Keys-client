@@ -1,19 +1,19 @@
-import { dbConfig } from "@/dbConfig/dbConfig";
-import UserModel from "@/models/userModel";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '@/config';
 
-dbConfig.connect();
 export async function POST(request: NextRequest) {
     try{
         const reqBody = await request.json();
         const {email, password} = reqBody;
 
-        let user = await UserModel.findOne({email});
+        let [user] = await db.select().from(users).where(eq(users.email, email));
         if(!user){
-            user = await UserModel.findOne({username: email});
+            [user] = await db.select().from(users).where(eq(users.username, email));
             if(!user){
                 return NextResponse.json({message: "User not found"}, {status: 400});
             }
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
             success: true
         });
 
-        const token = await jwt.sign({id: user._id}, JWT_SECRET, {expiresIn: "2days"});
+        const token = await jwt.sign({id: user.id}, JWT_SECRET, {expiresIn: "2days"});
 
         response.cookies.set("access_token", token, {
             httpOnly: true,

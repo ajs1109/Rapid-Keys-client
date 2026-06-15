@@ -17,3 +17,9 @@ export interface AuthResponse {
   token: string;
   accessToken: string;
 }
+
+export interface DbErrorResponse {
+  message: string;
+  success: boolean;
+}
+

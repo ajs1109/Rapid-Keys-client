@@ -1,39 +1,40 @@
-import { dbConfig } from "@/dbConfig/dbConfig";
-import UserModel from "@/models/userModel";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from "@/config";
+import bcrypt from "bcryptjs";
 
-dbConfig.connect();
 export async function POST(request: NextRequest) {
     try{
         const reqBody = await request.json();
         const {username, email, password} = reqBody;
 
-        let user = await UserModel.findOne({email: email});
-        if(user){
+        const [existingEmail] = await db.select().from(users).where(eq(users.email, email));
+        if(existingEmail){
             return NextResponse.json({message: "Email already exists"}, {status: 400});
         }
 
-        user = await UserModel.findOne({username: username});
-        if(user){
+        const [existingUsername] = await db.select().from(users).where(eq(users.username, username));
+        if(existingUsername){
             return NextResponse.json({message: "Username already exists"}, {status: 400});
         }
 
-        const newUser = new UserModel({
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const [newUser] = await db.insert(users).values({
             username,
             email,
-            password
-        });
-
-        await newUser.save();
+            password: hashedPassword,
+        }).returning();
 
         const response = NextResponse.json({
                     message: "Signup successful",
                     success: true
                 });
         
-        const token = await jwt.sign({id: newUser._id}, JWT_SECRET, {expiresIn: "2days"});
+        const token = await jwt.sign({id: newUser.id}, JWT_SECRET, {expiresIn: "2days"});
         
         response.cookies.set("access_token", token, {
             httpOnly: true,
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
         return response;
     }
     catch(error){
-        console.error('error from login:', error);
+        console.error('error from signup:', error);
         return NextResponse.json({message: "Internal server error"}, {status: 500});
     }
 }

@@ -1,10 +1,8 @@
-import { dbConfig } from "@/dbConfig/dbConfig";
+import { db } from "@/db";
+import { users, friends, friendRequests } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
 import { getUserFromToken } from "@/utils/auth";
-import UserModel from "@/models/userModel";
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
-
-dbConfig.connect();
 
 // GET /api/friends — returns { friends, requests } both as { id, username }[]
 export async function GET(req: NextRequest) {
@@ -12,18 +10,27 @@ export async function GET(req: NextRequest) {
   const { message, user, status } = await getUserFromToken(token ?? '');
   if (!user) return NextResponse.json({ message }, { status });
 
-  const populated = await UserModel.findById(user._id)
-    .populate('friends', 'username')
-    .populate('friendRequests', 'username')
-    .lean() as {
-      friends: Array<{ _id: unknown; username: string }>;
-      friendRequests: Array<{ _id: unknown; username: string }>;
-    } | null;
+  // Fetch friends of current user
+  const userFriends = await db
+    .select({
+      id: users.id,
+      username: users.username,
+    })
+    .from(friends)
+    .innerJoin(users, eq(users.id, friends.friendId))
+    .where(eq(friends.userId, user.id));
 
-  const friends = (populated?.friends ?? []).map(f => ({ id: String(f._id), username: f.username }));
-  const requests = (populated?.friendRequests ?? []).map(r => ({ id: String(r._id), username: r.username }));
+  // Fetch friend requests received by current user
+  const userRequests = await db
+    .select({
+      id: users.id,
+      username: users.username,
+    })
+    .from(friendRequests)
+    .innerJoin(users, eq(users.id, friendRequests.senderId))
+    .where(eq(friendRequests.receiverId, user.id));
 
-  return NextResponse.json({ friends, requests });
+  return NextResponse.json({ friends: userFriends, requests: userRequests });
 }
 
 // POST /api/friends — send a friend request { targetUsername }
@@ -37,26 +44,72 @@ export async function POST(req: NextRequest) {
   if (!targetUsername?.trim()) return NextResponse.json({ message: 'Username required' }, { status: 400 });
   if (targetUsername === user.username) return NextResponse.json({ message: "You can't add yourself" }, { status: 400 });
 
-  const target = await UserModel.findOne({ username: targetUsername });
+  const [target] = await db.select().from(users).where(eq(users.username, targetUsername));
   if (!target) return NextResponse.json({ message: 'User not found' }, { status: 404 });
 
-  if (target.friends.some((id: mongoose.Types.ObjectId) => id.equals(user._id)))
+  // Check if they are already friends
+  const [existingFriendship] = await db
+    .select()
+    .from(friends)
+    .where(
+      and(
+        eq(friends.userId, user.id),
+        eq(friends.friendId, target.id)
+      )
+    );
+  if (existingFriendship) {
     return NextResponse.json({ message: 'Already friends!' }, { status: 400 });
+  }
 
-  if (target.friendRequests.some((id: mongoose.Types.ObjectId) => id.equals(user._id)))
+  // Check if a friend request was already sent by user to target
+  const [existingRequest] = await db
+    .select()
+    .from(friendRequests)
+    .where(
+      and(
+        eq(friendRequests.senderId, user.id),
+        eq(friendRequests.receiverId, target.id)
+      )
+    );
+  if (existingRequest) {
     return NextResponse.json({ message: 'Request already sent' }, { status: 400 });
+  }
 
-  // Also check if target already sent us a request — auto-accept
-  if (user.friendRequests.some((id: mongoose.Types.ObjectId) => id.equals(target._id))) {
-    user.friendRequests = user.friendRequests.filter((id: mongoose.Types.ObjectId) => !id.equals(target._id)) as typeof user.friendRequests;
-    user.friends.push(target._id);
-    target.friends.push(user._id);
-    await user.save();
-    await target.save();
+  // Check if target already sent a request to user (auto-accept)
+  const [incomingRequest] = await db
+    .select()
+    .from(friendRequests)
+    .where(
+      and(
+        eq(friendRequests.senderId, target.id),
+        eq(friendRequests.receiverId, user.id)
+      )
+    );
+
+  if (incomingRequest) {
+    // Delete friend request
+    await db.delete(friendRequests)
+      .where(
+        and(
+          eq(friendRequests.senderId, target.id),
+          eq(friendRequests.receiverId, user.id)
+        )
+      );
+
+    // Insert mutual friendships
+    await db.insert(friends).values([
+      { userId: user.id, friendId: target.id },
+      { userId: target.id, friendId: user.id }
+    ]);
+
     return NextResponse.json({ message: 'You are now friends!' });
   }
 
-  target.friendRequests.push(user._id);
-  await target.save();
-  return NextResponse.json({ message: 'Friend request sent!', targetId: target._id.toString() });
+  // Otherwise, insert a new friend request
+  await db.insert(friendRequests).values({
+    senderId: user.id,
+    receiverId: target.id,
+  });
+
+  return NextResponse.json({ message: 'Friend request sent!', targetId: target.id });
 }

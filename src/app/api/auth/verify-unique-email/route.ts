@@ -1,8 +1,8 @@
-import { dbConfig } from "@/dbConfig/dbConfig";
-import UserModel from "@/models/userModel";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-dbConfig.connect();
 export async function POST(req: NextRequest) {
     const reqBody = await req.json();
     const { email } = reqBody;
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const user = await UserModel.findOne({ email });
+        const [user] = await db.select().from(users).where(eq(users.email, email));
         if (user) {
             return NextResponse.json({ message: "Email is already registered", available: false }, { status: 200 });
         }
