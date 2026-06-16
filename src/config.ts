@@ -6,6 +6,6 @@ export const NODE_ENV = process.env.NODE_ENV || 'development';
 export const HOST_NAME = process.env.HOST_NAME || 'localhost';
 export const PORT = process.env.PORT || '3000';
 
-export const SERVER_URI = process.env.NODE_ENV === 'production'
-  ? (process.env.NEXT_PUBLIC_SERVER_URI || 'https://rapidkeys-1042819106730.us-central1.run.app')
-  : 'http://localhost:3000';
+export const SERVER_URI = typeof window !== 'undefined'
+  ? window.location.origin
+  : (process.env.SERVER_URI || process.env.NEXT_PUBLIC_SERVER_URI || `http://localhost:${process.env.PORT || '3000'}`);
