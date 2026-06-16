@@ -32,6 +32,15 @@ jobs:
         env:
           PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         run: |
+          # Check if secret is set
+          if [ -z "$PUBLISH_PROFILE" ]; then
+            echo "::error::Secret 'AZURE_WEBAPP_PUBLISH_PROFILE' is empty or not set in GitHub Secrets."
+            echo "Please download the publish profile from the Azure Portal and add it as a Repository Secret."
+            exit 1
+          fi
+          
+          echo "Publish profile found (Length: ${#PUBLISH_PROFILE} characters)"
+          
           # Parse SCM credentials from Publish Profile using python
           CREDS=$(python3 -c "
           import xml.etree.ElementTree as ET
@@ -51,4 +60,5 @@ jobs:
           curl -f -X POST -u "$CREDS" \
             -H "Content-Type: application/json" \
             https://rapid-keys-app.scm.azurewebsites.net/api/registry/webhook
+
 
