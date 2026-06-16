@@ -28,9 +28,27 @@ jobs:
         run: |
           docker push niveshakregistry.azurecr.io/rapid-keys:latest
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'rapid-keys-app'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          images: 'niveshakregistry.azurecr.io/rapid-keys:latest'
+      - name: Deploy to Azure Web App via SCM Webhook
+        env:
+          PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        run: |
+          # Parse SCM credentials from Publish Profile using python
+          CREDS=$(python3 -c "
+          import xml.etree.ElementTree as ET
+          import os, sys
+          try:
+              root = ET.fromstring(os.environ['PUBLISH_PROFILE'])
+              for p in root.findall('publishProfile'):
+                  if p.attrib.get('publishMethod') == 'MSDeploy':
+                      print(p.attrib.get('userName') + ':' + p.attrib.get('userPWD'))
+                      sys.exit(0)
+          except Exception as e:
+              print('Error parsing publish profile:', e, file=sys.stderr)
+          sys.exit(1)
+          ")
+          
+          # Trigger container reload via Kudu SCM Webhook
+          curl -f -X POST -u "$CREDS" \
+            -H "Content-Type: application/json" \
+            https://rapid-keys-app.scm.azurewebsites.net/api/registry/webhook
+
