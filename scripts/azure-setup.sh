@@ -72,6 +72,12 @@ else
   echo "Web App $APP_NAME already exists. Skipping creation."
 fi
 
+# Enable SCM and FTP Basic Publishing Credentials (required for publish profiles to work)
+echo "Enabling SCM and FTP Basic Publishing Credentials on the Web App..."
+az resource update --resource-group "$RESOURCE_GROUP" --name scm --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent "sites/$APP_NAME" --set properties.allow=true
+az resource update --resource-group "$RESOURCE_GROUP" --name ftp --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies --parent "sites/$APP_NAME" --set properties.allow=true
+
+
 # 5. Configure container registry credentials on the Web App
 echo "Configuring container settings and registry access on Web App..."
 az webapp config container set \
