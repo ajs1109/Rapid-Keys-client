@@ -10,6 +10,13 @@ FROM node:22.12.0-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Dummy build-time environment variables to satisfy Next.js build checks
+ENV JWT_SECRET=dummy_secret_for_build
+ENV TOKEN_SECRET=dummy_token_secret_for_build
+ENV REFRESH_SECRET=dummy_refresh_secret_for_build
+ENV DATABASE_URL=postgresql://localhost/dummy_db
+
 RUN npm run build
 
 # Stage 3: Production runner
