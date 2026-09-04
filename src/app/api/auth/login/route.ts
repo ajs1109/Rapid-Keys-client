@@ -3,7 +3,7 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import { JWT_SECRET } from '@/config';
 
 export async function POST(request: NextRequest) {
@@ -29,7 +29,11 @@ export async function POST(request: NextRequest) {
             success: true
         });
 
-        const token = await jwt.sign({id: user.id}, JWT_SECRET, {expiresIn: "2days"});
+        const token = await new SignJWT({ id: user.id })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuedAt()
+            .setExpirationTime('2d')
+            .sign(new TextEncoder().encode(JWT_SECRET));
 
         response.cookies.set("access_token", token, {
             httpOnly: true,

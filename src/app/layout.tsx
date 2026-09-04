@@ -13,8 +13,8 @@ import "./globals.css";
 // });
 
 export const metadata: Metadata = {
-  title: "Rapid Keys",
-  description: "Typing Battle against your friends",
+  title: "Free Typing Speed Test — WPM & Accuracy | Rapid Keys",
+  description: "Start a free 60-second typing test instantly. Measure your words per minute and accuracy, save your best score, or challenge friends online.",
 };
 
 

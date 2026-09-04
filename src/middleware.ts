@@ -6,25 +6,22 @@ import { apiService } from "./utils/apiService";
 export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("access_token")?.value;
   let isAuthenticated = false;
-  apiService.setupHeader("Authorization", `Bearer ${accessToken}`);
-  try {
-    const { user } = await verifyUser(accessToken ?? "");
-    if (user) {
-      isAuthenticated = true;
-    } else {
-      console.log("no user foundd");
+  if (accessToken) {
+    apiService.setupHeader("Authorization", `Bearer ${accessToken}`);
+    try {
+      const { user } = await verifyUser(accessToken);
+      isAuthenticated = Boolean(user);
+    } catch {
+      isAuthenticated = false;
     }
-  } catch {
-    console.log("no user found error");
   }
 
   const path = request.nextUrl.pathname;
   const isAuthPath = publicRoutes.includes(path);
-  const isEmptyPath = path === "/";
   let nextResponse;
   if (!isAuthenticated && !isAuthPath) {
     nextResponse = NextResponse.redirect(new URL("/auth", request.url));
-  } else if (isAuthenticated && (isAuthPath || isEmptyPath)) {
+  } else if (isAuthenticated && isAuthPath) {
     nextResponse = NextResponse.redirect(new URL("/menu", request.url));
   } else {
     nextResponse = NextResponse.next();

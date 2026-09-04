@@ -1,9 +1,7 @@
-import jwt from "jsonwebtoken";
+import { SignJWT } from "jose";
 import { NODE_ENV, REFRESH_SECRET, TOKEN_SECRET } from "@/config";
 import { User } from "@/types/auth";
 import { NextResponse } from "next/server";
-import { faker } from "@faker-js/faker";
-import { LoremIpsum } from "lorem-ipsum";
 
 // Cookie options
 export const REFRESH_COOKIE_OPTIONS = {
@@ -21,18 +19,22 @@ export const ACCESS_COOKIE_OPTIONS = {
   path: "/",
 };
 
-export const generateAccessToken = (user: User, res: NextResponse) => {
-  const accessToken = jwt.sign({ user: user }, TOKEN_SECRET, {
-    expiresIn: "15m",
-  });
+export const generateAccessToken = async (user: User, res: NextResponse) => {
+  const accessToken = await new SignJWT({ user })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("15m")
+    .sign(new TextEncoder().encode(TOKEN_SECRET));
   res.cookies.set("access_token", accessToken);
   return accessToken;
 };
 
-export const generateRefreshToken = (user: User, res: NextResponse) => {
-  const refreshToken = jwt.sign({ user: user }, REFRESH_SECRET, {
-    expiresIn: "7d",
-  });
+export const generateRefreshToken = async (user: User, res: NextResponse) => {
+  const refreshToken = await new SignJWT({ user })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(new TextEncoder().encode(REFRESH_SECRET));
 
   res.cookies.set("refresh_token", refreshToken);
   return refreshToken;
@@ -41,63 +43,4 @@ export const generateRefreshToken = (user: User, res: NextResponse) => {
 export const clearCookies = (res: NextResponse) => {
   res.cookies.delete("refresh_token");
   res.cookies.delete("access_token");
-};
-
-const loremGenerator = new LoremIpsum({
-  sentencesPerParagraph: {
-    max: 5,
-    min: 3,
-  },
-  wordsPerSentence: {
-    max: 12,
-    min: 5,
-  },
-});
-
-export const generateTypingText = (count: number) => {
-  // Create different types of content to choose from
-  const textOptions = [
-    // Technology-focused text
-    () =>
-      faker.lorem.paragraph(4) +
-      " " +
-      faker.hacker.phrase() +
-      " " +
-      faker.lorem.paragraph(2),
-
-    // Business-focused text
-    () =>
-      faker.lorem.paragraph(3) +
-      " " +
-      faker.company.catchPhrase() +
-      " " +
-      faker.lorem.paragraph(2),
-
-    // Standard lorem ipsum
-    () => loremGenerator.generateParagraphs(2),
-
-    // More natural-sounding text
-    () => faker.lorem.paragraphs(2, "\n").replace(/\n/g, " "),
-
-    // Science-focused text
-    () =>
-      `The ${
-        faker.science.chemicalElement().name
-      } experiment showed promising results. ` +
-      faker.lorem.paragraph(4) +
-      ` Scientists at ${faker.company.name()} continue to research this phenomenon.`,
-  ];
-
-  // Randomly select one of the text generation methods
-  const selectedGenerator =
-    textOptions[Math.floor(Math.random() * textOptions.length)];
-  let generatedText = selectedGenerator();
-
-  // Ensure text is not too long (target ~150-200 words)
-  const words = generatedText.split(" ");
-  if (words.length > count) {
-    generatedText = words.slice(0, count).join(" ") + ".";
-  }
-
-  return generatedText;
 };

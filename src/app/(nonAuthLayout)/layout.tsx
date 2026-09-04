@@ -10,15 +10,5 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  
-  return (
-    <html lang="en">
-      <head>
-        <meta name="user-data" content="" />
-      </head>
-      <body className="antialiased">
-        {children}
-      </body>
-    </html>
-  );
+  return children;
 }

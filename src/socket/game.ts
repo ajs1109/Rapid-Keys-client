@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { generateTypingText } from "@/utils/serverUtils";
+import { generateTypingText } from "@/utils/typingText";
 import { ConnectedUser, Room } from "@/types/multiplayer";
 
 const GAME_TIME = 60; // 60 seconds

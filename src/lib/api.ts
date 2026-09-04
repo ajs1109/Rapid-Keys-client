@@ -101,6 +101,10 @@ export const updateScore = async(userId: string, wpm: number, accuracy: number, 
   }
 }
 
+export const claimGuestScore = async(wpm: number, accuracy: number): Promise<{message: string, success: boolean}> => {
+  return apiService.post<{message: string, success: boolean}>(`/game/claim-guest-score`, { wpm, accuracy });
+}
+
 export const updateProfile = async(user: EditUser): Promise<{message: string, user?: User}> => {
   try{
     const data = await apiService.put<{message: string, success: boolean}>(`/edit`, user);

@@ -1,7 +1,7 @@
 'use client'
 
-import React, { FormEvent } from 'react';
-import { signUp, login } from '@/lib/api';
+import React, { FormEvent, useEffect, useState } from 'react';
+import { signUp, login, claimGuestScore } from '@/lib/api';
 import useGameStore from '@/store/useGameStore';
 import { useRouter } from 'next/navigation'
 import { errorToast } from '@/utils/customToast';
@@ -18,8 +18,14 @@ type AuthEvent = FormEvent<HTMLFormElement> & {
 
 const AuthForms = () => {
   const { setGameState } = useGameStore();
+  const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
 
   const router = useRouter();
+
+  useEffect(() => {
+    const requestedMode = new URLSearchParams(window.location.search).get('mode');
+    if (requestedMode === 'signup') setActiveTab('signup');
+  }, []);
 
   const handleLogin = async (e: AuthEvent) => { 
     e.preventDefault();
@@ -31,7 +37,7 @@ const AuthForms = () => {
         formData.get('password') as string
       );
 
-      onAuthSuccess();
+      await onAuthSuccess();
     } catch (error) {
       errorToast(error instanceof Error ? error.message : 'Login failed');
     }
@@ -48,20 +54,35 @@ const AuthForms = () => {
         formData.get('password') as string
       );
 
-      onAuthSuccess();
+      await onAuthSuccess();
     } catch (error) {
       errorToast(error instanceof Error ? error.message : 'Signup failed')
     }
   };
 
-  const onAuthSuccess = () => {
+  const onAuthSuccess = async () => {
     setGameState('menu');
-    //successToast('Welcome!');
-    // Dispatch an event to sync auth state
     window.dispatchEvent(new Event('auth-state-changed'));
 
-    // Redirect to the menu page
-    router.push('/menu');
+    let guestScoreSaved = false;
+    const pendingScore = window.sessionStorage.getItem('rapid-keys-pending-score');
+    if (pendingScore) {
+      try {
+        const { wpm, accuracy } = JSON.parse(pendingScore) as { wpm: number; accuracy: number };
+        await claimGuestScore(wpm, accuracy);
+        window.sessionStorage.removeItem('rapid-keys-pending-score');
+        guestScoreSaved = true;
+      } catch {
+        // Keep the pending result so the user can retry saving after authentication.
+      }
+    }
+
+    const next = new URLSearchParams(window.location.search).get('next');
+    if (next === 'multi-player') {
+      router.push('/multi-player');
+      return;
+    }
+    router.push(guestScoreSaved ? '/menu?guestScore=saved' : '/menu');
   }
 
   return (
@@ -85,17 +106,9 @@ const AuthForms = () => {
           {(['login', 'signup'] as const).map(tab => (
             <button
               key={tab}
-              onClick={() => {
-                const tabs = document.querySelectorAll('[data-tab]');
-                tabs.forEach(el => (el as HTMLElement).style.display = 'none');
-                const target = document.getElementById(`tab-${tab}`);
-                if (target) target.style.display = 'block';
-                document.querySelectorAll('[data-tabtrigger]').forEach(el => {
-                  el.setAttribute('data-active', el.getAttribute('data-tabtrigger') === tab ? 'true' : 'false');
-                });
-              }}
+              onClick={() => setActiveTab(tab)}
               data-tabtrigger={tab}
-              data-active={tab === 'login' ? 'true' : 'false'}
+              data-active={activeTab === tab ? 'true' : 'false'}
               className="flex-1 pb-3 text-sm font-bold uppercase tracking-widest transition-all data-[active=true]:text-primary data-[active=true]:border-b-2 data-[active=true]:border-primary data-[active=false]:text-on-surface-variant"
             >
               {tab === 'login' ? 'Log In' : 'Sign Up'}
@@ -104,7 +117,7 @@ const AuthForms = () => {
         </div>
 
         {/* Login tab */}
-        <div id="tab-login" data-tab>
+        <div id="tab-login" data-tab hidden={activeTab !== 'login'}>
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="stat-label block mb-2" htmlFor="login-email">Email or Username</label>
@@ -130,7 +143,7 @@ const AuthForms = () => {
         </div>
 
         {/* Signup tab */}
-        <div id="tab-signup" data-tab style={{ display: 'none' }}>
+        <div id="tab-signup" data-tab hidden={activeTab !== 'signup'}>
           <form onSubmit={handleSignup} className="space-y-5">
             <div>
               <label className="stat-label block mb-2" htmlFor="signup-username">Username</label>

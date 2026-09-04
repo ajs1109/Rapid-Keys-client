@@ -1,14 +1,23 @@
 'use client'
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ArrowRight, Zap, BrainCircuit, Swords } from 'lucide-react';
 import useGameStore from '@/store/useGameStore';
 import type { GameMode, GameState } from '@/types/game';
 import { useRouter } from 'next/navigation';
+import { successToast } from '@/utils/customToast';
 
 const MenuPage: React.FC = () => {
   const { setGameState, setGameMode, highestWPM } = useGameStore();
   const router = useRouter();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('guestScore') === 'saved') {
+      successToast('Typing score saved', 'Your guest result is now part of your Rapid Keys profile.');
+      window.history.replaceState({}, '', '/menu');
+    }
+  }, []);
 
   const handleModeSelect = (mode: NonNullable<GameMode>) => {
     setGameMode(mode);
