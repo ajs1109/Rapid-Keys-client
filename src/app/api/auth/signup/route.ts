@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-            maxAge: 2 * 24 * 60 * 60, // 2 days in seconds — must match JWT expiresIn
+            maxAge: 2 * 24 * 60 * 60, // 2 days in seconds; must match JWT expiresIn
             path: "/",
         });
         return response;

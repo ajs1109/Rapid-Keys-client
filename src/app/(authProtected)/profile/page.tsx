@@ -354,7 +354,7 @@ const ProfilePage = () => {
         </div>
         <div className="bg-surface-container-high rounded-2xl p-6 flex flex-col justify-between col-span-2" style={{ gridColumn: 'span 2' }}>
           <div className="stat-label">Rank</div>
-          <div className="text-2xl font-headline font-bold text-tertiary mt-2">{rankData ? `#${rankData.rank}` : '—'}</div>
+          <div className="text-2xl font-headline font-bold text-tertiary mt-2">{rankData ? `#${rankData.rank}` : '-'}</div>
           <div className="text-xs text-on-surface-variant mt-1">{rankData ? `of ${rankData.total} players` : 'Loading rank…'}</div>
         </div>
       </div>

@@ -72,7 +72,7 @@ const PlayerTrack = React.forwardRef<HTMLDivElement, PlayerTrackProps>(
             'absolute right-0 font-mono text-sm font-bold',
             isSelf ? 'text-primary' : isLeading ? 'text-secondary/70' : 'text-on-surface-variant'
           )}>
-            {wpm > 0 ? `${wpm}` : '—'}
+            {wpm > 0 ? `${wpm}` : '-'}
           </div>
         )}
       </div>

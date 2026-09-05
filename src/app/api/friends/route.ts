@@ -4,7 +4,7 @@ import { eq, and } from "drizzle-orm";
 import { getUserFromToken } from "@/utils/auth";
 import { NextRequest, NextResponse } from "next/server";
 
-// GET /api/friends — returns { friends, requests } both as { id, username }[]
+// GET /api/friends: returns { friends, requests } both as { id, username }[]
 export async function GET(req: NextRequest) {
   const token = req.cookies?.get("access_token")?.value;
   const { message, user, status } = await getUserFromToken(token ?? '');
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ friends: userFriends, requests: userRequests });
 }
 
-// POST /api/friends — send a friend request { targetUsername }
+// POST /api/friends: send a friend request { targetUsername }
 export async function POST(req: NextRequest) {
   const token = req.cookies?.get("access_token")?.value;
   const { message, user, status } = await getUserFromToken(token ?? '');

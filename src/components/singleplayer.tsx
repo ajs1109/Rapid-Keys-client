@@ -1,15 +1,13 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { RotateCcw, Home, Star, TrendingUp, Keyboard, LogIn, UserPlus } from 'lucide-react';
-import useGameStore from '@/store/useGameStore';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Home, LogIn, RotateCcw, Star, UserPlus } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { generateWords, updateScore } from '@/lib/api';
-import GlassPanel from '@/components/ui/GlassPanel';
-import ShinyButton from '@/components/ui/ShinyButton';
+import useGameStore from '@/store/useGameStore';
 
-const SAMPLE_TEXT = `Technology continues to transform the way we live and work in unprecedented ways. As artificial intelligence becomes more sophisticated, it opens up new possibilities for innovation and efficiency. However, we must carefully consider the ethical implications of these advances. The rapid pace of digital transformation requires us to adapt quickly while maintaining our human connections. Despite the challenges, this era of technological revolution presents exciting opportunities for those who are willing to embrace change and learn continuously.`;
+const SAMPLE_TEXT = 'the quick brown fox jumps over the lazy dog while bright ideas move through quiet minds and careful hands build useful things with patience focus and steady practice';
 const GAME_TIME = 60;
 
 interface SinglePlayerProps {
@@ -28,16 +26,34 @@ const SinglePlayer = ({ guestMode = false }: SinglePlayerProps) => {
   const [totalCharacters, setTotalCharacters] = useState(0);
   const [correctCharacters, setCorrectCharacters] = useState(0);
   const hiddenInputRef = useRef<HTMLInputElement>(null);
+  const typingViewportRef = useRef<HTMLDivElement>(null);
+  const activeCharacterRef = useRef<HTMLSpanElement>(null);
+  const resultsHeadingRef = useRef<HTMLHeadingElement>(null);
+  const startedRef = useRef(false);
+  const textRequestRef = useRef(0);
 
-  const { setGameState, setGameMode, user, setHighScore, highestAccuracy, highestWPM, setGamesPlayed, gamesPlayed } = useGameStore();
+  const {
+    setGameState,
+    setGameMode,
+    user,
+    setHighScore,
+    highestAccuracy,
+    highestWPM,
+    setGamesPlayed,
+    gamesPlayed,
+  } = useGameStore();
   const router = useRouter();
 
   const getWords = async () => {
+    const requestId = ++textRequestRef.current;
     try {
       const { words } = await generateWords(200);
-      setText(words);
+      if (requestId === textRequestRef.current && !startedRef.current) {
+        setText(words);
+        if (typingViewportRef.current) typingViewportRef.current.scrollTop = 0;
+      }
     } catch {
-      // fallback to SAMPLE_TEXT — already set
+      // Keep the local fallback when the word service is unavailable.
     }
   };
 
@@ -53,49 +69,90 @@ const SinglePlayer = ({ guestMode = false }: SinglePlayerProps) => {
     return () => document.removeEventListener('click', handleClick);
   }, []);
 
-  // Timer
   useEffect(() => {
     let id: NodeJS.Timeout | undefined;
     if (isActive && timeLeft > 0) {
       id = setInterval(() => {
-        setTimeLeft(t => {
-          if (t <= 1) { clearInterval(id); endGame(); return 0; }
-          return t - 1;
+        setTimeLeft((currentTime) => {
+          if (currentTime <= 1) {
+            clearInterval(id);
+            endGame();
+            return 0;
+          }
+          return currentTime - 1;
         });
       }, 1000);
     }
-    return () => { if (id) clearInterval(id); };
-  }, [isActive, timeLeft]);   // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      if (id) clearInterval(id);
+    };
+  }, [isActive, timeLeft]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Start on first keypress
   useEffect(() => {
     if (!isActive && userInput.length > 0) setIsActive(true);
   }, [userInput, isActive]);
 
-  // WPM + accuracy calculation
   useEffect(() => {
     if (!isActive || timeLeft <= 0) return;
     const minutes = (GAME_TIME - timeLeft) / 60;
-    let correctChars = 0, correctWordsCount = 0, cur = '', exp = '';
-    for (let i = 0; i < userInput.length; i++) {
-      if (userInput[i] === text[i]) {
+    let correctChars = 0;
+    let correctWordsCount = 0;
+    let currentWord = '';
+    let expectedWord = '';
+
+    for (let index = 0; index < userInput.length; index++) {
+      if (userInput[index] === text[index]) {
         correctChars++;
-        cur += userInput[i];
-        exp += text[i];
-        if (userInput[i] === ' ') {
-          if (cur.trim() === exp.trim()) correctWordsCount++;
-          cur = ''; exp = '';
+        currentWord += userInput[index];
+        expectedWord += text[index];
+        if (userInput[index] === ' ') {
+          if (currentWord.trim() === expectedWord.trim()) correctWordsCount++;
+          currentWord = '';
+          expectedWord = '';
         }
-      } else { cur = ''; exp = ''; }
+      } else {
+        currentWord = '';
+        expectedWord = '';
+      }
     }
+
     setCorrectCharacters(correctChars);
     setTotalCharacters(userInput.length);
     setAccuracy(userInput.length > 0 ? Math.round((correctChars / userInput.length) * 100) : 100);
     setWpm(Math.round(correctWordsCount / Math.max(minutes, 1 / 60)));
   }, [userInput, isActive, timeLeft, text]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (timeLeft > 0) setUserInput(e.target.value);
+  useLayoutEffect(() => {
+    const viewport = typingViewportRef.current;
+    const activeCharacter = activeCharacterRef.current;
+    if (!viewport || !activeCharacter) return;
+
+    if (userInput.length === 0) {
+      viewport.scrollTop = 0;
+      return;
+    }
+
+    const lineHeight = Number.parseFloat(window.getComputedStyle(viewport).lineHeight);
+    const viewportRect = viewport.getBoundingClientRect();
+    const activeRect = activeCharacter.getBoundingClientRect();
+    const lowerReadingLine = viewportRect.top + lineHeight * 3;
+
+    if (activeRect.top >= lowerReadingLine) {
+      viewport.scrollTop += activeRect.top - (viewportRect.top + lineHeight);
+    } else if (activeRect.top < viewportRect.top) {
+      viewport.scrollTop = Math.max(0, viewport.scrollTop - (viewportRect.top - activeRect.top + lineHeight));
+    }
+  }, [userInput]);
+
+  useEffect(() => {
+    if (showResults) resultsHeadingRef.current?.focus();
+  }, [showResults]);
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (timeLeft <= 0) return;
+    const nextValue = event.target.value.slice(0, text.length);
+    if (nextValue.length > 0) startedRef.current = true;
+    setUserInput(nextValue);
   };
 
   const endGame = async () => {
@@ -114,198 +171,198 @@ const SinglePlayer = ({ guestMode = false }: SinglePlayerProps) => {
     }
     const updatedGamesPlayed = gamesPlayed + 1;
     setGamesPlayed(updatedGamesPlayed);
-    try { await updateScore(user?.id ?? '', wpm, accuracy, updatedGamesPlayed); } catch { /* ignore */ }
+    try {
+      await updateScore(user?.id ?? '', wpm, accuracy, updatedGamesPlayed);
+    } catch {
+      // A temporary score sync failure should not block the result screen.
+    }
     setShowResults(true);
   };
 
   const resetGame = () => {
-    setUserInput(''); setIsActive(false); setTimeLeft(GAME_TIME);
-    setWpm(0); setAccuracy(100); setShowResults(false);
-    setTotalCharacters(0); setCorrectCharacters(0); setIsHighScore(false);
-    wpmHistory.current = [];
+    textRequestRef.current++;
+    startedRef.current = false;
+    setUserInput('');
+    setIsActive(false);
+    setTimeLeft(GAME_TIME);
+    setWpm(0);
+    setAccuracy(100);
+    setShowResults(false);
+    setTotalCharacters(0);
+    setCorrectCharacters(0);
+    setIsHighScore(false);
+    if (typingViewportRef.current) typingViewportRef.current.scrollTop = 0;
     getWords();
-    hiddenInputRef.current?.focus();
+    window.requestAnimationFrame(() => hiddenInputRef.current?.focus());
   };
 
   const homeButton = () => {
-    setGameState('menu'); setGameMode(null); router.push('/menu');
+    setGameState('menu');
+    setGameMode(null);
+    router.push('/menu');
   };
 
-  const progress = text.length > 0 ? Math.min(100, Math.round((userInput.length / text.length) * 100)) : 0;
-
-  // ── Rendered text with char-by-char coloring ──────────────────────────
   const renderedText = useMemo(() => {
-    return text.split('').map((char, index) => {
-      let cls = 'transition-colors duration-75 ';
-      if (index < userInput.length) {
-        cls += userInput[index] === char
-          ? 'text-on-surface'
-          : 'text-error bg-error/10';
-      } else if (index === userInput.length) {
-        cls += 'relative';
-      } else {
-        cls += 'text-on-surface-variant';
-      }
+    let absoluteIndex = 0;
+    const words = text.split(' ');
+
+    return words.map((word, wordIndex) => {
+      const wordStart = absoluteIndex;
+      const spaceIndex = wordStart + word.length;
+      absoluteIndex += word.length + 1;
+      const hasTrailingSpace = wordIndex < words.length - 1;
+
       return (
-        <span key={index} className={cls}>
-          {index === userInput.length && <span className="caret-custom" />}
-          {char}
-        </span>
+        <React.Fragment key={`${wordStart}-${wordIndex}`}>
+          <span className="inline-block whitespace-nowrap" data-word-index={wordIndex}>
+          {word.split('').map((character, characterIndex) => {
+            const index = wordStart + characterIndex;
+            const isCurrent = index === userInput.length;
+            let className = 'relative transition-colors duration-75 ';
+
+            if (index < userInput.length) {
+              className += userInput[index] === character ? 'text-on-surface' : 'text-error bg-error/10';
+            } else {
+              className += 'text-on-surface-variant';
+            }
+
+            return (
+              <span
+                key={index}
+                ref={isCurrent ? activeCharacterRef : undefined}
+                className={className}
+              >
+                {isCurrent && <span className="caret-custom" aria-hidden="true" />}
+                {character}
+              </span>
+            );
+          })}
+          </span>
+          {hasTrailingSpace && (
+            <span
+              ref={spaceIndex === userInput.length ? activeCharacterRef : undefined}
+              className={`relative transition-colors duration-75 ${spaceIndex < userInput.length ? (userInput[spaceIndex] === ' ' ? 'text-on-surface' : 'text-error bg-error/10') : 'text-on-surface-variant'}`}
+            >
+              {spaceIndex === userInput.length && <span className="caret-custom" aria-hidden="true" />}
+              {' '}
+            </span>
+          )}
+        </React.Fragment>
       );
     });
   }, [text, userInput]);
 
-  // ── Sparkline data ─────────────────────────────────────────────────────
-  const wpmHistory = useRef<number[]>([]);
-  useEffect(() => {
-    if (isActive) wpmHistory.current = [...wpmHistory.current.slice(-7), wpm];
-  }, [wpm, isActive]);
-
-  // ── Results overlay ────────────────────────────────────────────────────
-  const ResultsOverlay = () => {
-    const maxBar = Math.max(...wpmHistory.current, 1);
+  if (showResults) {
     return (
-      <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-background/95 p-4 backdrop-blur-md sm:p-6" role="dialog" aria-modal="true" aria-labelledby="results-title">
-        <GlassPanel elevated className="relative my-auto w-full max-w-4xl overflow-hidden p-5 sm:p-8">
-          {/* ambient glows */}
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[100px]" />
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-secondary/10 rounded-full blur-[100px]" />
-
-          <div className="relative z-10">
-            {/* Header */}
-            <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h2 id="results-title" className="mb-2 font-headline text-3xl font-bold tracking-[-0.03em] text-on-surface sm:text-5xl">
-                  Test complete
-                </h2>
-                <p className="text-sm text-on-surface-variant">
-                  Your 60-second typing result
-                </p>
-              </div>
+      <section
+        className="min-h-[calc(100svh-7rem)] w-full px-4 py-8 sm:px-8 sm:py-12 lg:px-12"
+        aria-labelledby="results-title"
+      >
+        <div className="mx-auto flex w-full max-w-7xl flex-col">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2
+                id="results-title"
+                ref={resultsHeadingRef}
+                tabIndex={-1}
+                className="font-headline text-3xl font-semibold tracking-[-0.03em] text-on-surface outline-none sm:text-4xl"
+              >
+                Test complete
+              </h2>
               {isHighScore && (
-                <div className="flex items-center gap-3 bg-tertiary/10 border border-tertiary/30 px-6 py-3 rounded-xl">
-                  <Star size={20} className="text-tertiary" />
-                  <span className="text-tertiary font-headline font-bold text-lg uppercase italic">
-                    New Personal Best!
-                  </span>
-                </div>
+                <p className="mt-2 flex items-center gap-2 text-sm font-medium text-tertiary">
+                  <Star size={15} aria-hidden="true" /> New personal best
+                </p>
               )}
             </div>
+            <button
+              type="button"
+              onClick={resetGame}
+              className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-on-surface-variant outline-none transition-colors hover:bg-surface-container-high hover:text-on-surface focus-visible:ring-2 focus-visible:ring-secondary"
+            >
+              <RotateCcw size={17} aria-hidden="true" /> Try again
+            </button>
+          </div>
 
-            {/* Bento stat grid */}
-            <div className="mb-7 grid grid-cols-12 gap-3 sm:gap-5">
-              {/* WPM */}
-              <div className="col-span-6 flex flex-col justify-between rounded-xl bg-surface-container-highest p-5 md:col-span-4 md:p-7">
-                <span className="stat-label mb-4">Final Speed</span>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-headline text-5xl font-extrabold tracking-[-0.04em] text-secondary sm:text-6xl">{wpm}</span>
-                  <span className="font-headline text-base font-medium text-on-surface-variant sm:text-lg">WPM</span>
-                </div>
-                {isHighScore && (
-                  <div className="mt-6 flex items-center gap-2 text-tertiary text-sm">
-                    <TrendingUp size={14} /><span>New personal best!</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Accuracy */}
-              <div className="col-span-6 flex flex-col justify-between rounded-xl bg-surface-container-highest p-5 md:col-span-4 md:p-7">
-                <span className="stat-label mb-4">Accuracy Rate</span>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-headline text-5xl font-extrabold tracking-[-0.04em] text-tertiary sm:text-6xl">{accuracy}</span>
-                  <span className="font-headline text-base font-medium text-on-surface-variant sm:text-lg">%</span>
-                </div>
-                <div className="mt-6 h-2 w-full bg-surface-container-lowest rounded-full overflow-hidden">
-                  <div className="h-full bg-tertiary rounded-full" style={{ width: `${accuracy}%` }} />
-                </div>
-              </div>
-
-              {/* WPM Sparkline */}
-              <div className="col-span-12 rounded-xl bg-surface-container-highest p-5 md:col-span-4 md:p-7">
-                <span className="stat-label mb-4">Speed Over Time</span>
-                <div className="h-20 flex items-end gap-1 mt-4">
-                  {(wpmHistory.current.length > 0 ? wpmHistory.current : [0]).map((v, i) => (
-                    <div
-                      key={i}
-                      className="flex-1 bg-secondary/60 rounded-t transition-all"
-                      style={{ height: `${Math.round((v / maxBar) * 100)}%`, opacity: 0.3 + (i / (wpmHistory.current.length || 1)) * 0.7 }}
-                    />
-                  ))}
-                </div>
-                <div className="flex justify-between mt-2">
-                  <span className="stat-label">Start</span>
-                  <span className="stat-label">Peak</span>
-                </div>
-              </div>
-
-              {/* Chars */}
-              <div className="col-span-12 md:col-span-6 bg-surface-container-highest p-6 rounded-xl flex items-center justify-between">
-                <div>
-                  <span className="stat-label">Correct Characters</span>
-                  <div className="text-4xl font-headline font-bold text-on-surface mt-2">{correctCharacters}</div>
-                </div>
-                <div>
-                  <span className="stat-label">Total Characters</span>
-                  <div className="text-4xl font-headline font-bold text-on-surface-variant mt-2">{totalCharacters}</div>
-                </div>
-              </div>
-
-              {/* Previous best — only when not a new high score */}
-              {!guestMode && !isHighScore && (
-                <div className="col-span-12 md:col-span-6 bg-surface-container-highest p-6 rounded-xl flex items-center justify-between">
-                  <div>
-                    <span className="stat-label">Best WPM</span>
-                    <div className="text-4xl font-headline font-bold text-primary mt-2">{highestWPM}</div>
-                  </div>
-                  <div>
-                    <span className="stat-label">Best Accuracy</span>
-                    <div className="text-4xl font-headline font-bold text-primary mt-2">{highestAccuracy}%</div>
-                  </div>
-                </div>
-              )}
+          <div className="mt-10 grid gap-8 sm:grid-cols-2 sm:gap-12 lg:mt-14 lg:max-w-4xl">
+            <div>
+              <p className="text-sm text-on-surface-variant">Words per minute</p>
+              <p className="mt-1 font-mono text-6xl font-medium tracking-[-0.04em] text-secondary sm:text-7xl lg:text-8xl">
+                {wpm}<span className="ml-2 text-lg tracking-normal text-on-surface-variant sm:text-xl">wpm</span>
+              </p>
             </div>
+            <div>
+              <p className="text-sm text-on-surface-variant">Accuracy</p>
+              <p className="mt-1 font-mono text-6xl font-medium tracking-[-0.04em] text-on-surface sm:text-7xl lg:text-8xl">
+                {accuracy}<span className="text-2xl tracking-normal text-on-surface-variant sm:text-3xl">%</span>
+              </p>
+            </div>
+          </div>
 
-            {guestMode && (
-              <div className="mb-6 flex flex-col gap-4 rounded-xl bg-secondary/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <dl className="mt-9 flex flex-wrap gap-x-10 gap-y-4 text-sm sm:mt-12">
+            <div>
+              <dt className="text-on-surface-variant">Correct characters</dt>
+              <dd className="mt-1 font-mono text-xl tabular-nums text-on-surface">{correctCharacters}</dd>
+            </div>
+            <div>
+              <dt className="text-on-surface-variant">Characters typed</dt>
+              <dd className="mt-1 font-mono text-xl tabular-nums text-on-surface">{totalCharacters}</dd>
+            </div>
+            {!guestMode && (
+              <>
                 <div>
-                  <h3 className="font-headline text-lg font-bold text-on-surface">Save this score</h3>
-                  <p className="mt-1 max-w-lg text-sm leading-6 text-on-surface-variant">
-                    Create a free account or log in and we’ll add this result to your profile automatically.
-                  </p>
+                  <dt className="text-on-surface-variant">Best WPM</dt>
+                  <dd className="mt-1 font-mono text-xl tabular-nums text-on-surface">{highestWPM}</dd>
                 </div>
-                <div className="flex shrink-0 flex-wrap gap-2">
-                  <Link href="/auth?mode=login&claim=guest" className="inline-flex min-h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-on-surface outline-none transition-colors hover:bg-surface-container-high focus-visible:ring-2 focus-visible:ring-secondary">
+                <div>
+                  <dt className="text-on-surface-variant">Best accuracy</dt>
+                  <dd className="mt-1 font-mono text-xl tabular-nums text-on-surface">{highestAccuracy}%</dd>
+                </div>
+              </>
+            )}
+          </dl>
+
+          <div className="mt-10 flex flex-col gap-4 border-t border-white/5 pt-6 sm:mt-12 sm:flex-row sm:items-center sm:justify-between">
+            {guestMode ? (
+              <>
+                <div>
+                  <h3 className="font-headline text-lg font-semibold text-on-surface">Save your score</h3>
+                  <p className="mt-1 text-sm text-on-surface-variant">Log in or create an account.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href="/auth?mode=login&claim=guest"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-on-surface outline-none transition-colors hover:bg-surface-container-high focus-visible:ring-2 focus-visible:ring-secondary"
+                  >
                     <LogIn size={16} aria-hidden="true" /> Log in
                   </Link>
-                  <Link href="/auth?mode=signup&claim=guest" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-on-primary-fixed outline-none transition-colors hover:bg-primary-dim focus-visible:ring-2 focus-visible:ring-primary">
+                  <Link
+                    href="/auth?mode=signup&claim=guest"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-on-primary-fixed outline-none transition-colors hover:bg-primary-dim focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  >
                     <UserPlus size={16} aria-hidden="true" /> Sign up
                   </Link>
                 </div>
-              </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={homeButton}
+                className="inline-flex min-h-11 w-fit items-center gap-2 rounded-lg px-3 text-sm font-semibold text-on-surface outline-none transition-colors hover:bg-surface-container-high focus-visible:ring-2 focus-visible:ring-secondary"
+              >
+                <Home size={16} aria-hidden="true" /> Home
+              </button>
             )}
-
-            <div className="flex flex-wrap justify-end gap-3">
-              {!guestMode && (
-                <ShinyButton variant="ghost" size="md" icon={<Home size={16} />} onClick={homeButton}>
-                  Home
-                </ShinyButton>
-              )}
-              <ShinyButton variant="primary" size="md" icon={<RotateCcw size={16} />} onClick={resetGame}>
-                Try again
-              </ShinyButton>
-            </div>
           </div>
-        </GlassPanel>
-      </div>
+        </div>
+      </section>
     );
-  };
+  }
 
-  // ── Main render ────────────────────────────────────────────────────────
   return (
-    <div className={`${guestMode ? 'min-h-[calc(100svh-9rem)]' : 'h-[calc(100vh-80px)] overflow-hidden'} relative flex flex-col items-center`}>
-      {/* Hidden input */}
+    <section className="relative flex min-h-[calc(100svh-7rem)] w-full flex-col px-4 pb-8 sm:px-8 lg:px-12">
       <input
-        title="Start Typing"
+        title="Start typing"
         ref={hiddenInputRef}
         value={userInput}
         onChange={handleInputChange}
@@ -314,92 +371,53 @@ const SinglePlayer = ({ guestMode = false }: SinglePlayerProps) => {
         aria-label="Typing test input"
       />
 
-      <div className="flex w-full max-w-4xl min-h-0 flex-1 flex-col px-4 sm:px-8">
-
-        {/* ── Stats bar ── */}
-        <div className="mb-4 flex items-center justify-between border-b border-white/5 py-4">
-          <div className="grid flex-1 grid-cols-3 gap-3 sm:flex sm:gap-10">
-            <div className="flex flex-col">
-              <span className="stat-label">Time Remaining</span>
-              <span className={`mt-1 font-mono text-xl font-medium tabular-nums sm:text-3xl ${timeLeft <= 10 ? 'text-error' : 'text-secondary'}`}>
-                00:{String(timeLeft).padStart(2, '0')}
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-start pt-[clamp(4rem,10vh,6rem)]">
+        <div className="flex items-end justify-between gap-5">
+          <div className="grid flex-1 grid-cols-3 gap-4 sm:max-w-xl sm:gap-10">
+            <div>
+              <span className="stat-label">Time</span>
+              <span className={`mt-1 block font-mono text-2xl font-medium tabular-nums sm:text-3xl ${timeLeft <= 10 ? 'text-error' : 'text-secondary'}`}>
+                0:{String(timeLeft).padStart(2, '0')}
               </span>
             </div>
-            <div className="flex flex-col">
-              <span className="stat-label">Words Per Minute</span>
-              <span className="mt-1 font-mono text-xl font-medium tabular-nums text-secondary sm:text-3xl">{wpm}</span>
+            <div>
+              <span className="stat-label">WPM</span>
+              <span className="mt-1 block font-mono text-2xl font-medium tabular-nums text-on-surface sm:text-3xl">{wpm}</span>
             </div>
-            <div className="flex flex-col">
+            <div>
               <span className="stat-label">Accuracy</span>
-              <span className={`mt-1 font-mono text-xl font-medium tabular-nums sm:text-3xl ${accuracy >= 95 ? 'text-tertiary' : accuracy >= 80 ? 'text-secondary' : 'text-error'}`}>
+              <span className={`mt-1 block font-mono text-2xl font-medium tabular-nums sm:text-3xl ${accuracy < 80 ? 'text-error' : 'text-on-surface'}`}>
                 {accuracy}%
               </span>
             </div>
           </div>
-          <div className="ml-3 flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={resetGame}
-              className="p-2 rounded hover:bg-surface-variant text-on-surface-variant transition-colors"
-              title="Reset"
-            >
-              <RotateCcw size={18} />
-            </button>
-            <div className="hidden h-8 w-px bg-white/10 sm:block" />
-            <div className="hidden items-center gap-2 rounded-full bg-surface-container-high px-4 py-1.5 sm:flex">
-              <span className="w-2 h-2 rounded-full bg-tertiary" />
-              <span className="stat-label normal-case text-[10px]">Zen Mode</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Typing area ── */}
-        <div className="flex-1 min-h-0 flex flex-col justify-start py-2">
-          <div className="w-full relative">
-            {/* Ambient cyan glow behind typing area */}
-            <div className="absolute -inset-10 bg-secondary/5 blur-[120px] rounded-full pointer-events-none" />
-            <div
-              className="mono-focus relative cursor-text select-none overflow-hidden text-xl leading-[1.85] text-on-surface-variant sm:text-2xl lg:text-3xl"
-              style={{ maxHeight: guestMode ? '36vh' : '42vh' }}
-              onClick={() => hiddenInputRef.current?.focus()}
-            >
-              {renderedText}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Progress bar ── */}
-        <div className="w-full py-6 sm:py-8">
-          <div className="h-1.5 w-full bg-surface-container-lowest rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-secondary to-tertiary rounded-full shadow-[0_0_12px_rgba(0,238,252,0.4)]"
-              style={{
-                width: '100%',
-                transform: `scaleX(${progress / 100})`,
-                transformOrigin: 'left',
-                transition: 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
-              }}
-            />
-          </div>
-          <div className="flex justify-between mt-3">
-            <span className="stat-label">Session Progress</span>
-            <span className="stat-label">{progress}% Complete</span>
-          </div>
-        </div>
-
-        {/* ── Keyboard hint ── */}
-        <div className="flex items-center justify-between pb-4">
-          <button onClick={resetGame} className="rounded-lg bg-surface-container-highest px-3 py-1.5 font-mono text-xs text-secondary outline-none transition-colors hover:bg-surface-bright focus-visible:ring-2 focus-visible:ring-secondary">
-            reset test
+          <button
+            type="button"
+            onClick={resetGame}
+            className="mb-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-on-surface-variant outline-none transition-colors hover:bg-surface-container-high hover:text-on-surface focus-visible:ring-2 focus-visible:ring-secondary"
+            aria-label="Restart test"
+            title="Restart test"
+          >
+            <RotateCcw size={19} aria-hidden="true" />
           </button>
-          <div className="flex items-center gap-2 text-on-surface-variant/40">
-            <Keyboard size={14} />
-            <span className="text-xs">Click the text, then start typing</span>
+        </div>
+
+        <div className="mt-8 sm:mt-10">
+          <div
+            ref={typingViewportRef}
+            className="mono-focus h-[7.2em] w-full cursor-text select-none overflow-hidden text-[clamp(1.25rem,2.35vw,2rem)] text-on-surface-variant"
+            onClick={() => hiddenInputRef.current?.focus()}
+            aria-label="Typing passage"
+          >
+            {renderedText}
           </div>
+
+          {!isActive && userInput.length === 0 && (
+            <p className="mt-5 text-center text-sm text-on-surface-variant">Start typing</p>
+          )}
         </div>
       </div>
-
-      {showResults && <ResultsOverlay />}
-    </div>
+    </section>
   );
 };
 

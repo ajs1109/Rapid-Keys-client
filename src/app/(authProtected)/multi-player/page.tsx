@@ -538,7 +538,7 @@ const MultiPlayer: React.FC = () => {
             ) : (
               <div className="py-14 flex flex-col items-center gap-3 text-on-surface-variant">
                 <Swords size={36} className="opacity-20" />
-                <p className="text-sm">No public rooms right now — create one!</p>
+                <p className="text-sm">No public rooms right now. Create one!</p>
               </div>
             )}
           </div>

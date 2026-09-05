@@ -4,7 +4,7 @@ import { eq, and } from "drizzle-orm";
 import { getUserFromToken } from "@/utils/auth";
 import { NextRequest, NextResponse } from "next/server";
 
-// PUT /api/friends/respond — accept or decline a friend request
+// PUT /api/friends/respond: accept or decline a friend request
 // Body: { fromUserId: string, action: 'accept' | 'decline' }
 export async function PUT(req: NextRequest) {
   const token = req.cookies?.get("access_token")?.value;

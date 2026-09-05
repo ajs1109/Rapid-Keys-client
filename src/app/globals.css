@@ -34,12 +34,12 @@
 /* ─── Component utilities ────────────────────────────────────────────────── */
 @layer components {
 
-  /* Glass panel — the primary container surface */
+  /* Glass panel: the primary container surface */
   .glass-panel {
     @apply bg-surface-variant/60 backdrop-blur-xl border border-white/5 rounded-xl;
   }
 
-  /* Elevated glass — floating modals / overlays */
+  /* Elevated glass: floating modals and overlays */
   .glass-modal {
     @apply bg-surface-container/90 backdrop-blur-2xl border border-white/10 rounded-2xl;
   }
@@ -53,14 +53,15 @@
 
   /* Blinking caret */
   .caret-custom {
-    display: inline-block;
+    position: absolute;
+    left: -1px;
+    top: 0.15em;
+    display: block;
     width: 2px;
-    height: 1.1em;
+    height: 1.35em;
     background: #00eefc;
     border-radius: 1px;
-    vertical-align: text-bottom;
     animation: caret-blink 1s step-end infinite;
-    box-shadow: 0 0 8px rgba(0, 238, 252, 0.6);
   }
 
   /* Shiny button shimmer mask */
@@ -167,4 +168,3 @@
 .animate-count-in {
   animation: count-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
-

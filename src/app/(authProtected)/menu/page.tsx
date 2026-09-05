@@ -77,7 +77,7 @@ const MenuPage: React.FC = () => {
               <div className="text-right">
                 <div className="stat-label mb-1">Your Best</div>
                 <div className="text-4xl font-headline font-bold text-secondary">
-                  {highestWPM > 0 ? highestWPM : '—'}{' '}
+                  {highestWPM > 0 ? highestWPM : '-'}{' '}
                   <span className="text-lg font-light text-on-surface-variant">WPM</span>
                 </div>
               </div>
@@ -179,7 +179,7 @@ const MenuPage: React.FC = () => {
           <span className="text-xs font-mono text-on-surface-variant">SERVER: US-EAST-1</span>
         </div>
         <div className="h-4 w-px bg-outline-variant/30" />
-        <span className="text-xs font-mono text-on-surface-variant">LATENCY: —</span>
+        <span className="text-xs font-mono text-on-surface-variant">LATENCY: -</span>
         <div className="h-4 w-px bg-outline-variant/30" />
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />

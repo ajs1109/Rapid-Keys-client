@@ -4,7 +4,7 @@ import { count, sql } from "drizzle-orm";
 import { getUserFromToken } from "@/utils/auth";
 import { NextRequest, NextResponse } from "next/server";
 
-// GET /api/game/rank — returns current user's global rank and total player count
+// GET /api/game/rank: returns current user's global rank and total player count
 export async function GET(req: NextRequest) {
   const token = req.cookies?.get("access_token")?.value;
   const { message, user, status } = await getUserFromToken(token ?? '');

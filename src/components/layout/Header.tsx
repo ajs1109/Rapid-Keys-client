@@ -1,4 +1,4 @@
-// components/layout/Header.tsx  — Kinetic Precision TopNavBar
+// components/layout/Header.tsx: Kinetic Precision TopNavBar
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react';

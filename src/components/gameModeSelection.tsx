@@ -87,7 +87,7 @@ const GameModeSelection: React.FC = () => {
             Solo Practice
           </h3>
           <p className="text-on-surface-variant text-sm mb-6">
-            Sharpen your skills in a distraction-free Zen mode. No opponents — just you and the clock.
+            Sharpen your skills in a distraction-free Zen mode. No opponents, just you and the clock.
           </p>
           <ShinyButton
             variant="secondary"
@@ -114,7 +114,7 @@ const GameModeSelection: React.FC = () => {
             </div>
           </div>
 
-          {/* Empty state — rooms load on the multi-player page */}
+          {/* Empty state: rooms load on the multi-player page */}
           <div className="px-6 py-12 flex flex-col items-center justify-center gap-4 text-on-surface-variant">
             <Zap size={40} className="opacity-20" />
             <p className="text-sm">Join a room to see the live lobby</p>

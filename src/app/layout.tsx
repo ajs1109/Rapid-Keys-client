@@ -13,7 +13,7 @@ import "./globals.css";
 // });
 
 export const metadata: Metadata = {
-  title: "Free Typing Speed Test — WPM & Accuracy | Rapid Keys",
+  title: "Free Typing Speed Test | WPM and Accuracy | Rapid Keys",
   description: "Start a free 60-second typing test instantly. Measure your words per minute and accuracy, save your best score, or challenge friends online.",
 };
 

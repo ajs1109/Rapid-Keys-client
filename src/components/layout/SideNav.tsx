@@ -142,7 +142,7 @@ const SideNav: React.FC<SideNavProps> = ({ onClose, asOverlay }) => {
             )}
           </button>
 
-          {/* Friends — accordion */}
+          {/* Friends accordion */}
           <div>
             <button
               onClick={() => setFriendsOpen(v => !v)}
